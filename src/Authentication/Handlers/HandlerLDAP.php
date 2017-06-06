@@ -1,4 +1,6 @@
-<?php namespace METALab\Auth\Handler;
+<?php
+
+namespace CSUNMetaLab\Authentication\Handlers;
 
 use Exception;
 

@@ -1,7 +1,9 @@
-<?php namespace METALab\Auth;
+<?php
+
+namespace CSUNMetaLab\Authentication;
 
 use Schema;
-use METALab\Auth\Interfaces\MetaAuthenticatableContract;
+use CSUNMetaLab\Authentication\Interfaces\MetaAuthenticatableContract;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;

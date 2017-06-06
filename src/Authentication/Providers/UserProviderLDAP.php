@@ -1,11 +1,13 @@
-<?php namespace METALab\Auth\Provider;
+<?php
+
+namespace CSUNMetaLab\Authentication\Providers;
 
 use Exception;
 
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
-use METALab\Auth\Handler\HandlerLDAP;
+use CSUNMetaLab\Authentication\Handlers\HandlerLDAP;
 
 /**
  * Service provider handler that provides LDAP authentication operations.

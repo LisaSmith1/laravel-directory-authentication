@@ -1,4 +1,6 @@
-<?php namespace METALab\Auth\Provider;
+<?php
+
+namespace CSUNMetaLab\Authentication\Providers;
 
 use Illuminate\Support\ServiceProvider,
 	Illuminate\Support\Facades\Auth,
@@ -22,7 +24,7 @@ class AuthServiceProvider extends ServiceProvider
 	public function boot() {
 		// LDAP auth extension
 		Auth::provider('ldap', function($app, array $config) {
-			return new \METALab\Auth\Provider\UserProviderLDAP();
+			return new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP();
 		});
 	}
 

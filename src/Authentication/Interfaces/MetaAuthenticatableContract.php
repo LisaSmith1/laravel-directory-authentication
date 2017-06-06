@@ -1,4 +1,6 @@
-<?php namespace METALab\Auth\Interfaces;
+<?php
+
+namespace CSUNMetaLab\Authentication\Interfaces;
 
 interface MetaAuthenticatableContract {
 
