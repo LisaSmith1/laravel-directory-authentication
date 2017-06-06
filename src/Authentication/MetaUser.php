@@ -89,4 +89,75 @@ class MetaUser extends Model implements AuthenticatableContract, MetaAuthenticat
 	public function getIsValidAttribute() {
 		return $this->exists;
 	}
+
+	/**
+	 * Returns the currently-masquerading user instance. This is not the user
+	 * the authenticated user is masquerading as. Returns null if there is no
+	 * masquerade curently taking place.
+	 *
+	 * @return MetaUser|null 
+	 */
+	public function getMasqueradingUser() {
+		if($this->isMasquerading()) {
+			return session('masquerading_user');
+		}
+
+		return null;
+	}
+
+	/**
+     * Returns whether this user instance is currently masquerading as another
+     * user.
+     *
+     * @return boolean
+     */
+    public function isMasquerading() {
+        return session('masquerading_user') != null;
+    }
+
+	/**
+     * Allows the logged-in user to masquerade as the passed User. Returns true
+     * on success or false otherwise.
+     *
+     * @param MetaUser $user The user instance to become
+     * @return boolean
+     */
+    public function masqueradeAsUser($user) {
+        // if this user is authenticated, then we can masquerade as the
+        // user that has been passed as the parameter
+        if(auth()->check()) {
+            if(auth()->user()->user_id == $this->user_id) {
+                // write the authenticated user into the session and then
+                // authenticate as the passed user instance
+                session(['masquerading_user' => auth()->user()]);
+                auth()->logout();
+                auth()->login($user);
+
+                // success!
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Stops masquerading as another user if we are currently masquerading.
+     * Returns true on success or false otherwise.
+     *
+     * @return boolean
+     */
+    public function stopMasquerading() {
+        if($this->isMasquerading()) {
+            // become the real user again
+            auth()->logout();
+            auth()->login(session('masquerading_user'));
+            session(['masquerading_user' => null]);
+
+            // success!
+            return true;
+        }
+
+        return false;
+    }
 }
