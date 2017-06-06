@@ -38,7 +38,7 @@ return [
     | LDAP admin password
     |--------------------------------------------------------------------------
     |
-    | The admin passwrod to use when searching for people. This is only used
+    | The admin password to use when searching for people. This is only used
     | when user password validation is turned off (so searching can still happen)
     |
     */
@@ -94,7 +94,7 @@ return [
     | LDAP email attribute
     |--------------------------------------------------------------------------
     |
-    | The field to use when looking-up a person in LDAP by their email address;
+    | The field to use when looking-up a person in LDAP by their email address.
     | Default is "mail".
     |
     */
