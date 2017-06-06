@@ -17,7 +17,7 @@
         "classmap": [
             "src/Authentication/"
         ],
-        "psr-0": {
+        "psr-4": {
             "CSUNMetaLab\\Authentication\\": "src/Authentication/"
         }
     }
