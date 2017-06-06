@@ -1,0 +1,24 @@
+{
+    "name": "csun-metalab/laravel-authentication",
+    "description": "Composer package for Laravel 5.2 and above to allow for directory-based authentication",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Matthew Fritz",
+            "email": "mattf@burbankparanormal.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.9"
+    },
+    "minimum-stability": "stable",
+    "autoload": {
+        "classmap": [
+            "src/Authentication/"
+        ],
+        "psr-0": {
+            "CSUNMetaLab\\Authentication\\": "src/Authentication/"
+        }
+    }
+}
