@@ -24,6 +24,8 @@ class HandlerLDAP
 	// values for searching
 	private $search_user_id;
 	private $search_username;
+	private $search_mail;
+	private $search_mail_array;
 
 	// true to allow auth binds without a password
 	private $allowNoPass;
@@ -37,9 +39,12 @@ class HandlerLDAP
 	 * @param string $password The password for binding
 	 * @param string $search_user_id The attribute to use for searching by user ID
 	 * @param string $search_username The attribute to use for searching by username
+	 * @param string $search_mail Optional attribute to use for searching by email
+	 * @param string $search_mail_array Optional attribute to use for searching by email array
 	 */
 	public function __construct($host, $basedn, $dn, $password,
-		$search_user_id, $search_username) {
+		$search_user_id, $search_username, $search_mail="mail",
+		$search_mail_array="mailLocalAddress") {
 		$this->host = $host;
 		$this->basedn = $basedn;
 		$this->dn = $dn;
@@ -47,6 +52,8 @@ class HandlerLDAP
 
 		$this->search_user_id = $search_user_id;
 		$this->search_username = $search_username;
+		$this->search_mail = $search_mail;
+		$this->search_mail_array = $search_mail_array;
 
 		// false by default so we don't accidentally cause security problems
 		$this->allowNoPass = false;
@@ -147,27 +154,21 @@ class HandlerLDAP
 
 	/**
 	 * Returns the value of the specified attribute from the result set. Returns
-	 * false if the attribute could not be found.
+	 * null if the attribute could not be found.
 	 *
 	 * @param Result-instance $results The result-set to search through
 	 * @param string $attr_name The attribute name to look for
-	 * @return string|integer|boolean
+	 * @return string|integer|boolean|null
 	 */
     public function getAttributeFromResults($results, $attr_name) {
-        $attr = false;
-        foreach($results as $node)
-            {
-            	//dd($node->getAttributes());
-                foreach($node->getAttributes() as $attribute)
-                {
-                    if ($attribute->getName() == $attr_name)
-                    {
-                        $attr =  $attribute->getValues()[0]; // attribute found
-                        break;
-                    }
+        foreach($results as $node) {
+            foreach($node->getAttributes() as $attribute) {
+                if ($attribute->getName() == $attr_name) {
+                    return $attribute->getValues()[0]; // attribute found
                 }
             }
-        return $attr;
+        }
+        return null;
     }
 
     /**
@@ -190,7 +191,8 @@ class HandlerLDAP
 	 */
 	public function searchByAuth($value) {
 		$results = $this->ldap->search($this->basedn,
-			"(|(" . $this->search_username . "=$value)(mailLocalAddress=$value))");
+			"(|(" . $this->search_username . "=$value)(" .
+				$this->search_mail_array . "=$value))");
 		return $results;
 	}
 
@@ -201,7 +203,8 @@ class HandlerLDAP
 	 * @return Result-instance
 	 */
 	public function searchByEmail($email) {
-		$results = $this->ldap->search($this->basedn, 'mail=' . $email);
+		$results = $this->ldap->search($this->basedn,
+			$this->search_mail . '=' . $email);
 		return $results;
 	}
 
@@ -212,7 +215,8 @@ class HandlerLDAP
 	 * @return Result-instance
 	 */
 	public function searchByEmailArray($email) {
-		$results = $this->ldap->search($this->basedn, 'mailLocalAddress=' . $email);
+		$results = $this->ldap->search($this->basedn,
+			$this->search_mail_array . '=' . $email);
 		return $results;
 	}
 
@@ -223,7 +227,8 @@ class HandlerLDAP
 	 * @return Result-instance
 	 */
 	public function searchByUid($uid) {
-		$results = $this->ldap->search($this->basedn, $this->search_username . '=' . $uid);
+		$results = $this->ldap->search($this->basedn,
+			$this->search_username . '=' . $uid);
 		return $results;
 	}
 

@@ -20,6 +20,8 @@ class UserProviderLDAP implements UserProvider
 	// values for searching
 	private $search_user_id;
 	private $search_username;
+	private $search_user_mail;
+	private $search_user_mail_array;
 	private $search_db_user_id_prefix;
 
 	/**
@@ -27,26 +29,30 @@ class UserProviderLDAP implements UserProvider
 	 */
 	public function __construct() {
 		// set the searching attributes in LDAP
-		$this->search_user_id = config('app.ldap.search_user_id');
-		$this->search_username = config('app.ldap.search_username');
+		$this->search_user_id = config('ldap.search_user_id');
+		$this->search_username = config('ldap.search_username');
+		$this->search_user_mail = config('ldap.search_user_mail');
+		$this->search_user_mail_array = config('ldap.search_user_mail_array');
 
 		// create the LDAP handler
 		$this->ldap = new HandlerLDAP(
-			config('app.ldap.host'),
-			config('app.ldap.basedn'),
-			config('app.ldap.dn'),
-			config('app.ldap.password'),
+			config('ldap.host'),
+			config('ldap.basedn'),
+			config('ldap.dn'),
+			config('ldap.password'),
 			$this->search_user_id,
-			$this->search_username);
+			$this->search_username,
+			$this->search_user_mail,
+			$this->search_user_mail_array);
 
 		// set the model name to use as the user model
 		$this->modelName = config('auth.providers.users.model');
 
 		// set whether blank passwords are allowed to be used for auth
-		$this->ldap->setAllowNoPass(config('app.ldap.allow_no_pass'));
+		$this->ldap->setAllowNoPass(config('ldap.allow_no_pass'));
 
 		// set the searching attributes in the database after LDAP
-		$this->search_db_user_id_prefix = config('app.ldap.search_user_id_prefix');
+		$this->search_db_user_id_prefix = config('ldap.search_user_id_prefix');
 	}
 
 	/**
@@ -81,13 +87,19 @@ class UserProviderLDAP implements UserProvider
 	    		$firstName = $this->ldap->getAttributeFromResults($result, "givenName");
 	    		$lastName = $this->ldap->getAttributeFromResults($result, "sn");
 	    		$displayName = $this->ldap->getAttributeFromResults($result, "displayName");
-	    		$email = $this->ldap->getAttributeFromResults($result, "mail");
+	    		$email = $this->ldap->getAttributeFromResults($result, $this->search_user_mail);
 
-	    		// grab the first user with the specified attributes; return a fake User instance
+	    		// grab the first user with the specified attributes; return a fake user instance
 	    		// if the user does not exist in the database
 	    		$user = $m::findForAuth($this->search_db_user_id_prefix . $emplId);
 	    		if(empty($user)) {
 	    			$user = new $m();
+	    		}
+
+	    		// if the user ID is empty, we have an invalid user and should
+	    		// treat it like a regular invalid authentication attempt
+	    		if(empty($emplId)) {
+	    			return null;
 	    		}
 
 	    		// add the LDAP search attributes
@@ -146,18 +158,15 @@ class UserProviderLDAP implements UserProvider
 	 * @return boolean
 	 */
 	protected function testCredentials($username, $password) {
-		// check for an email address
-		if(strpos($username, "@") !== FALSE) {
-			// we have to do something different with the bind to
-			// check the credentials
-			$this->ldap->connect();
+		// we have to do something different with the bind to
+		// check the credentials
+		$this->ldap->connect();
 
-    		$result = $this->ldap->searchByAuth($username);
+		$result = $this->ldap->searchByAuth($username);
 
-    		// now we have to retrieve the uid and use that as
-    		// the username
-    		$username = $this->ldap->getAttributeFromResults($result, $this->search_username);
-		}
+		// now we have to retrieve the uid and use that as
+		// the username
+		$username = $this->ldap->getAttributeFromResults($result, $this->search_username);
 
 		// perform the bind with the uid/password combination
 		return $this->ldap->connect($username, $password);

@@ -14,19 +14,7 @@ class AuthServiceProvider extends ServiceProvider
 	 *
 	 * @var bool
 	 */
-	protected $defer = false;
-
-	/**
-	 * Bootstrap the application events.
-	 *
-	 * @return void
-	 */
-	public function boot() {
-		// LDAP auth extension
-		Auth::provider('ldap', function($app, array $config) {
-			return new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP();
-		});
-	}
+	protected $defer = true;
 
 	/**
 	 * Register the service provider.
@@ -34,7 +22,21 @@ class AuthServiceProvider extends ServiceProvider
 	 * @return void
 	 */
 	public function register() {
-		//
+		// LDAP auth extension
+		Auth::provider('ldap', function($app, array $config) {
+			return new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP();
+		});
+	}
+
+	/**
+	 * Bootstrap the application events.
+	 *
+	 * @return void
+	 */
+	public function boot() {
+		$this->publishes([
+        	__DIR__.'/../config/ldap.php' => config_path('ldap.php'),
+    	]);
 	}
 
 	/**
