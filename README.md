@@ -43,6 +43,7 @@ LDAP_SEARCH_MAIL=mail
 LDAP_SEARCH_MAIL_ARRAY=mailLocalAddress
 
 LDAP_DB_USER_ID_PREFIX=
+LDAP_DB_RETURN_FAKE_USER=false
 ```
 
 Next, add the service provider to your `providers` array in `config/app.php` in Laravel as follows:
@@ -148,7 +149,17 @@ Optional prefix before the value of the employee ID primary key in the associate
 
 Default is blank (no prefix).
 
-For example, LDAP might store the employee ID as numeric (`XXXXXXXXX`) but your database stores it as a textual value prepended with `members:` (ex: `members:XXXXXXXXX`). You would then set this value to `members:` and your database lookups would work. 
+For example, LDAP might store the employee ID as numeric (`XXXXXXXXX`) but your database stores it as a textual value prepended with `members:` (ex: `members:XXXXXXXXX`). You would then set this value to `members:` and your database lookups would work.
+
+### LDAP_DB_RETURN_FAKE_USER
+
+Determines whether to return an actual user instance if the user was found in the directory but not in the database.
+
+If `true`, a user instance will be returned with LDAP attributes that can then be used to create the user in the database.
+
+If `false`, the authentication attempt will fail outright if the user is not in the database because `Auth::attempt()` will return `false`.
+
+Default is `false`.
 
 ## The MetaUser Class
 
