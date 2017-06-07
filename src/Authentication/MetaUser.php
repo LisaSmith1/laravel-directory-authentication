@@ -2,6 +2,7 @@
 
 namespace CSUNMetaLab\Authentication;
 
+use Auth;
 use Schema;
 use CSUNMetaLab\Authentication\Interfaces\MetaAuthenticatableContract;
 
@@ -114,7 +115,7 @@ class MetaUser extends Model implements AuthenticatableContract, MetaAuthenticat
     }
 
 	/**
-     * Allows the logged-in user to masquerade as the passed User. Returns true
+     * Allows a logged-in user to masquerade as the passed User. Returns true
      * on success or false otherwise.
      *
      * @param MetaUser $user The user instance to become
@@ -123,17 +124,15 @@ class MetaUser extends Model implements AuthenticatableContract, MetaAuthenticat
     public function masqueradeAsUser($user) {
         // if this user is authenticated, then we can masquerade as the
         // user that has been passed as the parameter
-        if(auth()->check()) {
-            if(auth()->user()->user_id == $this->user_id) {
-                // write the authenticated user into the session and then
-                // authenticate as the passed user instance
-                session(['masquerading_user' => auth()->user()]);
-                auth()->logout();
-                auth()->login($user);
+        if(Auth::check()) {
+            // write the authenticated user into the session and then
+            // authenticate as the passed user instance
+            session(['masquerading_user' => Auth::user()]);
+            Auth::logout();
+            Auth::login($user);
 
-                // success!
-                return true;
-            }
+            // success!
+            return true;
         }
 
         return false;
@@ -148,8 +147,8 @@ class MetaUser extends Model implements AuthenticatableContract, MetaAuthenticat
     public function stopMasquerading() {
         if($this->isMasquerading()) {
             // become the real user again
-            auth()->logout();
-            auth()->login(session('masquerading_user'));
+            Auth::logout();
+            Auth::login(session('masquerading_user'));
             session(['masquerading_user' => null]);
 
             // success!
