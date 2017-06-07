@@ -17,6 +17,8 @@ Once the user has been authenticated via the directory service a local database 
 
 ## Installation
 
+**NOTE:** There are different configuration entries to change further down based on the Laravel version you are using.
+
 To install from Composer, use the following command:
 
 ```
@@ -54,11 +56,16 @@ Next, add the service provider to your `providers` array in `config/app.php` in 
 
    CSUNMetaLab\Authentication\Providers\AuthServiceProvider::class,
 
+   // You can also use this based on Laravel convention:
+   // 'CSUNMetaLab\Authentication\Providers\AuthServiceProvider',
+
    //...
 ],
 ```
 
-Next, add the full classname of the user model to use for database lookups in `config/auth.php` as follows:
+### Configuration (Laravel 5.2 and Above)
+
+Next, change the `driver` to `ldap` and add the full classname of the user model to use for database lookups in the `users` array within `config/auth.php` as follows:
 
 ```
 'providers' => [
@@ -72,6 +79,21 @@ Next, add the full classname of the user model to use for database lookups in `c
     ],
 ],
 ```
+
+### Configuration (Laravel 5.0 and 5.1)
+
+Next, change the `driver` to `ldap` and change the `model` attribute to be the full classname of the user model to use for database lookups within `config/auth.php` as follows:
+
+```
+// LDAP authentication method
+'driver' => 'ldap',
+
+// this can be any subclass of the CSUNMetaLab\Authentication\MetaUser class
+// or the MetaUser class itself since it works out of the box 
+'model' => 'Faculty\Models\Person',
+```
+
+### Publish Configuration
 
 Finally, run the following Artisan command to publish the configuration:
 
