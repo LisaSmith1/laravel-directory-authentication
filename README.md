@@ -234,3 +234,160 @@ A couple of additional things are happening in this subclass:
 
 ## Authenticating
 
+Authenticating with either the `MetaUser` or your custom subclass works just like regular database authentication in Laravel.
+
+This package makes a distinction between whether a user exists only in the directory or in both the directory and the database.
+
+### Authentication Only
+
+You could invoke `Auth::attempt()` in the following way:
+
+```
+$creds = ['username' => 'admin', 'password' => '123'];
+
+if(Auth::attempt($creds)) {
+  // valid user in the directory, so let's check to see whether the user is
+  // valid within the database too
+  if(Auth::user()->isValid) {
+    // user also exists within the database, so proceed into the application!
+    redirect('home');
+  }
+  else
+  {
+    // user does not exist within the database, so go ahead and return back
+    // to the login screen with an error
+    Auth::logout();
+    redirect('login')->withErrors([
+      'Local user record could not be found'
+    ]);
+  }
+}
+else
+{
+  // not a valid user in the directory, so go ahead and return back to the
+  // login screen with an error
+  redirect('login')->withErrors([
+    'Invalid username or password'
+  ]);
+}
+```
+
+### Authentication with Provisioning
+
+Because a distinction is made between valid directory and valid database users, you have the option of provisioning the user in your local database if he exists within the directory but not yet within the database.
+
+The user instance represented by `Auth::user()` also gets an array of attributes back from LDAP. This array can be accessed as `searchAttributes`. It contains the following key/value pairs:
+
+* `uid` (matches the value of search attribute `LDAP_SEARCH_USERNAME`)
+* `user_id` (matches the value of search attribute `LDAP_SEARCH_USER_ID`)
+* `first_name` (matches the value of `givenName`)
+* `last_name` (matches the value of `sn`)
+* `display_name` (matches the value of `display_name`)
+* `email` (matches the value of `LDAP_SEARCH_MAIL`)
+
+You can now change your authentication procedure from above to be the following:
+
+```
+$creds = ['username' => 'admin', 'password' => '123'];
+
+if(Auth::attempt($creds)) {
+  // valid user in the directory, so let's check to see whether the user is
+  // valid within the database too
+  if(Auth::user()->isValid) {
+    // user also exists within the database, so proceed into the application!
+    redirect('home');
+  }
+  else
+  {
+    // user does not exist within the database, so go ahead and provision the
+    // record and perform an automatic login; we are assuming the user instance
+    // uses a model called User here
+    $attrs = Auth::user()->searchAttributes;
+    $user = User::create([
+      'user_id' => $attrs['user_id'],
+      'first_name' => $attrs['first_name'],
+      'last_name' => $attrs['last_name'],
+      'display_name' => $attrs['display_name'],
+      'email' => $attrs['email'];
+    ]);
+
+    // perform the automatic login and the redirect
+    Auth::login($user);
+    redirect('home');
+  }
+}
+else
+{
+  // not a valid user in the directory, so go ahead and return back to the
+  // login screen with an error
+  redirect('login')->withErrors([
+    'Invalid username or password'
+  ]);
+}
+```
+
+## Masquerading
+
+This package also supports the ability for the logged-in user to become another user out of the box. This is especially useful in situations where an admin-level user may need to enter another user's account in order to triage and solve a problem directly.
+
+### Become Another User
+
+In order to become another user, it's as simple as finding the other user and then switching the logged-in user. The previous user is maintained in the session so switching back can be seamless.
+
+```
+// findOrFail is used here with a custom User instance but you can use any
+// subclass of MetaUser that you would like or MetaUser itself
+$switchUser = User::findOrFail('employee');
+
+if(Auth::user()->masqueradeAsUser($switchUser)) {
+  // successfully masquerading!
+}
+else
+{
+  // masquerade attempt failed
+}
+```
+
+### Am I Masquerading?
+
+It may be useful to determine whether the user reported by `Auth::user()` is actually a masqueraded user:
+
+```
+if(Auth::user()->isMasquerading()) {
+  // I am acting as someone else
+}
+else
+{
+  // it's the original logged-in user
+}
+```
+
+You can also retrieve the instance of the masquerading user (the original user that logged-in) in the following way:
+
+```
+if(Auth::user()->isMasquerading()) {
+  $originalUser = Auth::user()->getMasqueradingUser();
+  return "This account is really " . $originalUser->display_name;
+}
+else
+{
+  // not masquerading
+  return "Not masquerading";
+}
+```
+
+### Stop Masquerading
+
+Finally, it's simple to stop masquerading and return to your original user account.
+
+```
+if(Auth::user()->stopMasquerading()) {
+  // I have returned to my original user account
+}
+else
+{
+  // this account was not masquerading
+}
+```
+
+Calls to `Auth::user()` will now once again report the original logged-in user.
