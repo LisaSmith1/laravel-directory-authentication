@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=5.5.9",
-        "tiesa/ldap": "dev-master"
+        "tiesa/ldap": "1.0.*@dev"
     },
     "minimum-stability": "dev",
     "autoload": {
