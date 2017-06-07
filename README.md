@@ -177,7 +177,7 @@ For example, LDAP might store the employee ID as numeric (`XXXXXXXXX`) but your 
 
 Determines whether to return an actual user instance if the user was found in the directory but not in the database.
 
-If `true`, a user instance will be returned with LDAP attributes that can then be used to create the user in the database.
+If `true`, a user instance will be returned with LDAP attributes that can then be used to [create the user in the database](#authentication-with-provisioning).
 
 If `false`, the authentication attempt will fail outright if the user is not in the database because `Auth::attempt()` will return `false`.
 
