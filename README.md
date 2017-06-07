@@ -20,7 +20,7 @@ Once the user has been authenticated via the directory service a local database 
 To install from Composer, use the following command:
 
 ```
-composer require csun-metalab/laravel-authentication
+composer require csun-metalab/laravel-directory-authentication
 ```
 
 Now, add the following line(s) to your `.env` file:
