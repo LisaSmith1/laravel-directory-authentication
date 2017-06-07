@@ -90,7 +90,7 @@ Next, change the `driver` to `ldap` and change the `model` attribute to be the f
 
 // this can be any subclass of the CSUNMetaLab\Authentication\MetaUser class
 // or the MetaUser class itself since it works out of the box 
-'model' => 'Faculty\Models\Person',
+'model' => 'CSUNMetaLab\Authentication\MetaUser',
 ```
 
 ### Publish Configuration
