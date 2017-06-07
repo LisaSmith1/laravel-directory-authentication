@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
+use CSUNMetaLab\Authentication\Exceptions\InvalidUserModelException;
 use CSUNMetaLab\Authentication\Handlers\HandlerLDAP;
 
 /**
@@ -28,7 +29,11 @@ class UserProviderLDAP implements UserProvider
 	private $return_fake_user_instance;
 
 	/**
-	 * Constructs a new UserProviderLDAP object.
+	 * Constructs a new UserProviderLDAP object. This can throw an instance of
+	 * InvalidUserModelException if the auth model configuration parameter
+	 * does not exist or if the model class does not exist.
+	 *
+	 * @throws InvalidUserModelException
 	 */
 	public function __construct() {
 		// set the searching attributes in LDAP
@@ -48,8 +53,27 @@ class UserProviderLDAP implements UserProvider
 			$this->search_user_mail,
 			$this->search_user_mail_array);
 
-		// set the model name to use as the user model
+		// set the model name to use as the user model (Laravel 5.2 and up)
 		$this->modelName = config('auth.providers.users.model');
+		if(empty($this->modelName)) {
+			// try to read from the configuration value used by Laravel 5.0
+			// and 5.1 as a fallback
+			$this->modelName = config('auth.model');
+			if(empty($this->modelName)) {
+				// no valid model configuration so throw an exception immediately
+				// to prevent any further problems
+				throw new InvalidUserModelException(
+					"No valid user model could be found in your auth configuration"
+				);
+			}
+		}
+
+		// next, throw an exception if the class specified does not exist
+		if(!class_exists($this->modelName)) {
+			throw new InvalidUserModelException(
+				"The auth user model {$this->modelName} does not exist"
+			);
+		}
 
 		// set whether blank passwords are allowed to be used for auth
 		$this->ldap->setAllowNoPass(config('ldap.allow_no_pass'));
