@@ -19,11 +19,20 @@ Once the user has been authenticated via the directory service a local database 
 
 **NOTE:** There are different configuration entries to change further down based on the Laravel version you are using.
 
-To install from Composer, use the following command:
+### Composer, Environment, and Service Provider
+
+#### Composer
+
+To install from Composer, use the following commands in this order:
 
 ```
+composer require tiesa/ldap:dev-master
 composer require csun-metalab/laravel-directory-authentication
 ```
+
+There are two commands because `tiesa/ldap` cannot be in the `require` clause for this package as that dependency only exposes a `dev-master` release and no versioned releases. Due to this, it evaluates to a `minimum-stability` of `dev` and cannot be included as a dependency of a package going into a project with the `minimum-stability` of `stable`.
+
+#### Environment
 
 Now, add the following line(s) to your `.env` file:
 
@@ -47,6 +56,8 @@ LDAP_SEARCH_MAIL_ARRAY=mailLocalAddress
 LDAP_DB_USER_ID_PREFIX=
 LDAP_DB_RETURN_FAKE_USER=false
 ```
+
+#### Service Provider
 
 Next, add the service provider to your `providers` array in `config/app.php` in Laravel as follows:
 
