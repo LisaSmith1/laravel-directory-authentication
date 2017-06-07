@@ -1,5 +1,5 @@
 # Laravel Directory Authentication
-Composer package for Laravel 5.2 and above to allow for directory-based authentication.
+Composer package for Laravel 5.0 and above to allow for directory-based authentication.
 
 This package adds the ability to perform LDAP-based authentication.
 

@@ -24,6 +24,9 @@ class UserProviderLDAP implements UserProvider
 	private $search_user_mail_array;
 	private $search_db_user_id_prefix;
 
+	// whether to return a fake user instance for provisioning
+	private $return_fake_user_instance;
+
 	/**
 	 * Constructs a new UserProviderLDAP object.
 	 */
@@ -53,6 +56,9 @@ class UserProviderLDAP implements UserProvider
 
 		// set the searching attributes in the database after LDAP
 		$this->search_db_user_id_prefix = config('ldap.search_user_id_prefix');
+
+		// should a fake user instance be returned for provisioning?
+		$this->return_fake_user_instance = config('ldap.return_fake_user_instance');
 	}
 
 	/**
@@ -90,27 +96,36 @@ class UserProviderLDAP implements UserProvider
 	    		$email = $this->ldap->getAttributeFromResults($result, $this->search_user_mail);
 
 	    		// grab the first user with the specified attributes; return a fake user instance
-	    		// if the user does not exist in the database
+	    		// if the user does not exist in the database (but only if the configuration
+	    		// has been set up to do so)
 	    		$user = $m::findForAuth($this->search_db_user_id_prefix . $emplId);
 	    		if(empty($user)) {
-	    			$user = new $m();
-	    		}
+	    			if($this->return_fake_user_instance) {
+	    				$user = new $m();
 
-	    		// if the user ID is empty, we have an invalid user and should
-	    		// treat it like a regular invalid authentication attempt
-	    		if(empty($emplId)) {
-	    			return null;
-	    		}
+	    				// if the user ID is empty, we have an invalid user and should
+			    		// treat it like a regular invalid authentication attempt
+			    		if(empty($emplId)) {
+			    			return null;
+			    		}
 
-	    		// add the LDAP search attributes
-	    		$user->searchAttributes = [
-	    			'uid' => $uid,
-	    			'user_id' => $emplId,
-	    			'first_name' => $firstName,
-	    			'last_name' => $lastName,
-	    			'display_name' => $displayName,
-	    			'email' => $email,
-	    		];
+			    		// add the LDAP search attributes
+			    		$user->searchAttributes = [
+			    			'uid' => $uid,
+			    			'user_id' => $emplId,
+			    			'first_name' => $firstName,
+			    			'last_name' => $lastName,
+			    			'display_name' => $displayName,
+			    			'email' => $email,
+			    		];
+	    			}
+	    			else
+	    			{
+	    				// the configuration has specified that a new user instance should
+	    				// not be returned on an unsuccessful database lookup
+	    				return null;
+	    			}
+	    		}
 
 	    		// the authentication was successful
 	    		return $user;

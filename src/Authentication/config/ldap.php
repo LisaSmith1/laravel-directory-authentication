@@ -123,4 +123,23 @@ return [
     */
     'search_user_id_prefix' => env("LDAP_DB_USER_ID_PREFIX", ""),
 
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP/DB return user instance for provisioning
+    |--------------------------------------------------------------------------
+    |
+    | Determines whether to return an actual user instance if the user was
+    | found in the directory but not in the database.
+    |
+    | If true, a user instance will be returned with LDAP attributes that can
+    | then be used to create the user in the database.
+    |
+    | If false, the authentication attempt will fail outright if the user is
+    | not in the database because Auth::attempt() will return false.
+    |
+    | Default is false.
+    |
+    */
+    'return_fake_user_instance' => env("LDAP_DB_RETURN_FAKE_USER", false),
+
 ];
