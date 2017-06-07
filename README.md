@@ -251,7 +251,30 @@ This package makes a distinction between whether a user exists only in the direc
 
 ### Authentication Only
 
-You could invoke `Auth::attempt()` in the following way:
+#### Without Returning a Fake User Instance
+
+If `LDAP_DB_RETURN_FAKE_USER` is set to `false`, you could invoke `Auth::attempt()` in the following way:
+
+```
+$creds = ['username' => 'admin', 'password' => '123'];
+
+if(Auth::attempt($creds)) {
+  // valid user in the directory and the database, so proceed into the application!
+  redirect('home');
+}
+else
+{
+  // not a valid user (either in the directory or the database) so return back
+  // to the login page with an error
+  redirect('login')->withErrors([
+    'Invalid username or password'
+  ]);
+}
+```
+
+#### With Returning a Fake User Instance
+
+If `LDAP_DB_RETURN_FAKE_USER` is set to `true`, you could invoke `Auth::attempt()` in the following way:
 
 ```
 $creds = ['username' => 'admin', 'password' => '123'];
@@ -284,6 +307,8 @@ else
 ```
 
 ### Authentication with Provisioning
+
+**NOTE:** Authentication with provisioning only functions if `LDAP_DB_RETURN_FAKE_USER` has been set to `true`.
 
 Because a distinction is made between valid directory and valid database users, you have the option of provisioning the user in your local database if he exists within the directory but not yet within the database.
 
