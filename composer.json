@@ -13,7 +13,6 @@
         "php": ">=5.5.9",
         "tiesa/ldap": "dev-master"
     },
-    "minimum-stability": "stable",
     "autoload": {
         "classmap": [
             "src/Authentication/"
