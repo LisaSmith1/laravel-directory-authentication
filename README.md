@@ -231,10 +231,11 @@ $ldap->connect(); // will use the values of LDAP_DN and LDAP_PASSWORD
 // the base DN specified in the configuration
 $result = $ldap->searchByQuery("uid=manager");
 
-// you can then retrieve the relevant result that you want
+// you can then retrieve the relevant attributes that you want
 $name = $ldap->getAttributeFromResults($result, "displayName");
-if(empty($name)) {
-  return "The manager has the name of " . $name;
+$email = $ldap->getAttributeFromResults($result, "mail");
+if(!empty($name) && !empty($email)) {
+  return "Manager {$name} has the email of {$email}";
 }
 
 ```
