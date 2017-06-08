@@ -126,7 +126,7 @@ return [
     | use %s placeholder for the search value.
     |
     */
-    'search_user_query' => env("LDAP_SEARCH_USER_QUERY", "");
+    'search_user_query' => env("LDAP_SEARCH_USER_QUERY", ""),
 
     /*
     |--------------------------------------------------------------------------
