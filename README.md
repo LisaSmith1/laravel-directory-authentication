@@ -10,6 +10,7 @@ Once the user has been authenticated via the directory service a local database 
 * [Installation](#installation)
 * [Required Environment Variables](#required-environment-variables)
 * [Optional Environment Variables](#optional-environment-variables)
+* [The HandlerLDAP class](#the-handlerldap-class)
 * [The MetaUser Class](#the-metauser-class)
 * [Creating a Custom User Class](#creating-a-custom-user-class)
 * [Authenticating](#authenticating)
@@ -52,6 +53,7 @@ LDAP_SEARCH_USER_ID=employeeNumber
 LDAP_SEARCH_USERNAME=uid
 LDAP_SEARCH_MAIL=mail
 LDAP_SEARCH_MAIL_ARRAY=mailLocalAddress
+LDAP_SEARCH_USER_QUERY=
 
 LDAP_DB_USER_ID_PREFIX=
 LDAP_DB_RETURN_FAKE_USER=false
@@ -176,6 +178,12 @@ The field to use when looking-up a person in LDAP by all valid email addresses a
 
 Default is `mailLocalAddress`.
 
+### LDAP_SEARCH_USER_QUERY
+
+Optional search query that will replace the default query executed by the package during user directory searches. If not specified, the query that will be used is the equivalent of `(|(uid=%s)(mailLocalAddress=%s))` depending on the values of `LDAP_SEARCH_USERNAME` and `LDAP_SEARCH_MAIL_ARRAY`.
+
+If specified, this query needs to be a `vsprintf()`-compatible string and use `%s` as the placeholder for the search value.
+
 ### LDAP_DB_USER_ID_PREFIX
 
 Optional prefix before the value of the employee ID primary key in the associated database table/view.
@@ -194,7 +202,44 @@ If `false`, the authentication attempt will fail outright if the user is not in 
 
 Default is `false`.
 
-## The MetaUser Class
+## The `HandlerLDAP` Class
+
+The core LDAP functionality is provided by the `CSUNMetaLab\Authentication\Handlers\HandlerLDAP` class. This contains the connect, bind, and searching features used during authentication.
+
+This class can also be used on its own to provide general LDAP searching functionality as well and give you a consistent interface to execute lookup operations.
+
+You can return an instance of `HandlerLDAP` by executing a call to its factory class of `CSUNMetaLab\Authentication\Factories\HandlerLDAPFactory` as follows:
+
+`$ldap = HandlerLDAPFactory::fromDefaults();`
+
+You will now have an instance of the class loaded with the default configuration from `config/ldap.php`. If you wanted to search for someone outside of authentication purposes you could do the following, for example:
+
+```
+// this assumes the $ldap variable already holds an instance of HandlerLDAP
+
+// you can optionally set a new base DN to use during the connection and bind
+// $ldap->setBaseDN("ou=Administrators,ou=Auth,o=Organization");
+
+// you can now connect and subsequently bind to the directory in one of two ways:
+$ldap->connect(); // will use the values of LDAP_DN and LDAP_PASSWORD
+//$ldap->connect($username, $password); // will use explicit credentials
+
+// you can also set a new base DN to use prior to a search too
+// $ldap->setBaseDN("ou=Managers,ou=Auth,o=Organization");
+
+// now that you have a connection, you can perform any valid search query within
+// the base DN specified in the configuration
+$result = $ldap->searchByQuery("uid=manager");
+
+// you can then retrieve the relevant result that you want
+$name = $ldap->getAttributeFromResults($result, "displayName");
+if(empty($name)) {
+  return "The manager has the name of " . $name;
+}
+
+```
+
+## The `MetaUser` Class
 
 This package comes with the `CSUNMetaLab\Authentication\MetaUser` class that is configured to work properly with the directory authentication methods. It also supports [masquerading as another user](#masquerading) right out of the box with zero additional configuration.
 

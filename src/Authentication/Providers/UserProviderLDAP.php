@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
 use CSUNMetaLab\Authentication\Exceptions\InvalidUserModelException;
-use CSUNMetaLab\Authentication\Handlers\HandlerLDAP;
+use CSUNMetaLab\Authentication\Factories\HandlerLDAPFactory;
 
 /**
  * Service provider handler that provides LDAP authentication operations.
@@ -22,7 +22,6 @@ class UserProviderLDAP implements UserProvider
 	private $search_user_id;
 	private $search_username;
 	private $search_user_mail;
-	private $search_user_mail_array;
 	private $search_db_user_id_prefix;
 
 	// whether to return a fake user instance for provisioning
@@ -36,22 +35,14 @@ class UserProviderLDAP implements UserProvider
 	 * @throws InvalidUserModelException
 	 */
 	public function __construct() {
-		// set the searching attributes in LDAP
+		// set the searching attributes for LDAP that will be returned for user
+		// provisioning and testing credentials
 		$this->search_user_id = config('ldap.search_user_id');
 		$this->search_username = config('ldap.search_username');
 		$this->search_user_mail = config('ldap.search_user_mail');
-		$this->search_user_mail_array = config('ldap.search_user_mail_array');
 
-		// create the LDAP handler
-		$this->ldap = new HandlerLDAP(
-			config('ldap.host'),
-			config('ldap.basedn'),
-			config('ldap.dn'),
-			config('ldap.password'),
-			$this->search_user_id,
-			$this->search_username,
-			$this->search_user_mail,
-			$this->search_user_mail_array);
+		// create the LDAP handler using its factory
+		$this->ldap = HandlerLDAPFactory::fromDefaults();
 
 		// set the model name to use as the user model (Laravel 5.2 and up)
 		$this->modelName = config('auth.providers.users.model');
@@ -77,6 +68,12 @@ class UserProviderLDAP implements UserProvider
 
 		// set whether blank passwords are allowed to be used for auth
 		$this->ldap->setAllowNoPass(config('ldap.allow_no_pass'));
+
+		// set the custom auth search query if it exists
+		$customQuery = config('ldap.search_user_query');
+		if(!empty($customQuery)) {
+			$this->ldap->setAuthQuery($customQuery);
+		}
 
 		// set the searching attributes in the database after LDAP
 		$this->search_db_user_id_prefix = config('ldap.search_user_id_prefix');

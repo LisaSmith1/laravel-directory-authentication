@@ -27,6 +27,9 @@ class HandlerLDAP
 	private $search_mail;
 	private $search_mail_array;
 
+	// the LDAP query to be executed while searching for users
+	private $search_auth_query;
+
 	// true to allow auth binds without a password
 	private $allowNoPass;
 
@@ -57,6 +60,10 @@ class HandlerLDAP
 
 		// false by default so we don't accidentally cause security problems
 		$this->allowNoPass = false;
+
+		// set the default auth search query
+		$this->search_auth_query = "(|(" . $search_username . 
+			"=%s)(" . $search_mail_array . "=%s))";
 	}
 
 	/**
@@ -184,15 +191,21 @@ class HandlerLDAP
     /**
 	 * Queries LDAP for the record with the specified value for attributes
 	 * matching what could commonly be used for authentication. For the
-	 * purposes of this method, uid and mailLocalAddress are searched.
+	 * purposes of this method, uid and mailLocalAddress are searched by
+	 * default unless their values have been overridden.
 	 *
 	 * @param string $value The value to use for searching
 	 * @return Result-instance
 	 */
 	public function searchByAuth($value) {
-		$results = $this->ldap->search($this->basedn,
-			"(|(" . $this->search_username . "=$value)(" .
-				$this->search_mail_array . "=$value))");
+		// figure out how many times the placeholder occurs, then fill an
+		// array that number of times with the search value
+		$numArgs = substr_count($this->search_auth_query, "%s");
+		$args = array_fill(0, $numArgs, $value);
+
+		// format the string and then perform the search
+		$searchStr = vsprintf($this->search_auth_query, $args);
+		$results = $this->ldap->search($this->basedn, $searchStr);
 		return $results;
 	}
 
@@ -221,6 +234,17 @@ class HandlerLDAP
 	}
 
 	/**
+	 * Queries LDAP for the records using the specified query.
+	 *
+	 * @param string $query Any valid LDAP query to use for searching
+	 * @return Result-instance
+	 */
+	public function searchByQuery($query) {
+		$results = $this->ldap->search($this->basedn, $query);
+		return $results;
+	}
+
+	/**
 	 * Queries LDAP for the record with the specified uid.
 	 *
 	 * @param string $uid The uid to use for searching
@@ -239,5 +263,25 @@ class HandlerLDAP
 	 */
 	public function setAllowNoPass($allowNoPass) {
 		$this->allowNoPass = $allowNoPass;
+	}
+
+	/**
+	 * Sets the query used within the searchByAuth() method. This should be
+	 * structured in a vsprintf()-compatible format and use %s as the
+	 * placeholder for the search value.
+	 *
+	 * @param string $search_auth_query LDAP query to use
+	 */
+	public function setAuthQuery($search_auth_query) {
+		$this->search_auth_query = $search_auth_query;
+	}
+
+	/**
+	 * Sets the base DN used during queries.
+	 *
+	 * @param string $basedn The base DN to use
+	 */
+	public function setBaseDN($basedn) {
+		$this->basedn = $basedn;
 	}
 }
