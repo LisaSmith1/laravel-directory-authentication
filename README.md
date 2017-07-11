@@ -45,6 +45,7 @@ LDAP_BASE_DN=
 You may also elect to add the following optional line(s) to your `.env` file to customize the functionality further:
 
 ```
+LDAP_VERSION=3
 LDAP_ALLOW_NO_PASS=false
 LDAP_DN=
 LDAP_PASSWORD=
@@ -135,6 +136,10 @@ Someone under this base DN may therefore exist with the following record:
 ## Optional Environment Variables
 
 There are several optional environment variables that may be added to customize the functionality of the package even further.
+
+### LDAP_VERSION
+
+The version of LDAP to use when performing operations. The default is `3`.
 
 ### LDAP_ALLOW_NO_PASS
 

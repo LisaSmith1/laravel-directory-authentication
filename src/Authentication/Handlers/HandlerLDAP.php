@@ -8,6 +8,8 @@ use Toyota\Component\Ldap\Core\Manager,
     Toyota\Component\Ldap\Platform\Native\Driver,
     Toyota\Component\Ldap\Exception\BindException;
 
+use Toyota\Component\Ldap\API\ConnectionInterface;
+
 /**
  * Handler class for LDAP operations using the Tiesa LDAP package.
  */
@@ -32,6 +34,9 @@ class HandlerLDAP
 
 	// true to allow auth binds without a password
 	private $allowNoPass;
+
+	// LDAP version to use
+	private $version;
 
 	/**
 	 * Constructs a new HandlerLDAP object.
@@ -60,6 +65,9 @@ class HandlerLDAP
 
 		// false by default so we don't accidentally cause security problems
 		$this->allowNoPass = false;
+
+		// LDAPv3 by default
+		$this->version = 3;
 
 		// set the default auth search query
 		$this->search_auth_query = "(|(" . $search_username . 
@@ -102,6 +110,9 @@ class HandlerLDAP
 		$params = array(
 		    'hostname'  => $this->host,
 		    'base_dn'   => $this->basedn,
+		    'options' => [
+		    	ConnectionInterface::OPT_PROTOCOL_VERSION => $this->version,
+		    ],
 		);
 		$this->ldap = new Manager($params, new Driver());
 
@@ -170,7 +181,7 @@ class HandlerLDAP
     public function getAttributeFromResults($results, $attr_name) {
         foreach($results as $node) {
             foreach($node->getAttributes() as $attribute) {
-                if ($attribute->getName() == $attr_name) {
+                if (strtolower($attribute->getName()) == strtolower($attr_name)) {
                     return $attribute->getValues()[0]; // attribute found
                 }
             }
@@ -283,5 +294,14 @@ class HandlerLDAP
 	 */
 	public function setBaseDN($basedn) {
 		$this->basedn = $basedn;
+	}
+
+	/**
+	 * Sets the LDAP version to be used.
+	 *
+	 * @param int $version The LDAP version to use
+	 */
+	public function setVersion($version) {
+		$this->version = $version;
 	}
 }

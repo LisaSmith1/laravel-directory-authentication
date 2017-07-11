@@ -15,7 +15,7 @@ class HandlerLDAPFactory
 	 * @return HandlerLDAP
 	 */
 	public static function fromDefaults() {
-		return new HandlerLDAP(
+		$handler = new HandlerLDAP(
 			config('ldap.host'),
 			config('ldap.basedn'),
 			config('ldap.dn'),
@@ -25,5 +25,7 @@ class HandlerLDAPFactory
 			config('ldap.search_user_mail'),
 			config('ldap.search_user_mail_array')
 		);
+		$handler->setVersion(config('ldap.version'));
+		return $handler;
 	}
 }
