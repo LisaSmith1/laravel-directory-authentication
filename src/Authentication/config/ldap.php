@@ -185,7 +185,8 @@ return [
     | LDAP add people base DN
     |--------------------------------------------------------------------------
     |
-    | The base DN that will be used for adding people to a subtree
+    | The base DN that will be used for adding people to a subtree. If this
+    | value is left blank, the value of LDAP_BASE_DN will be used instead.
     |
     */
     'add_base_dn' => env("LDAP_ADD_BASE_DN", ""),
