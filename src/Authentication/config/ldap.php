@@ -169,4 +169,82 @@ return [
     */
     'return_fake_user_instance' => env("LDAP_DB_RETURN_FAKE_USER", false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP overlay DN for the subtrees
+    |--------------------------------------------------------------------------
+    |
+    | Optional overlay DN to give a consistent logical root for the search, add
+    | and modify subtrees in the directory.
+    |
+    */
+    'overlay_dn' => env("LDAP_OVERLAY_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP add people base DN
+    |--------------------------------------------------------------------------
+    |
+    | The base DN that will be used for adding people to a subtree
+    |
+    */
+    'add_base_dn' => env("LDAP_ADD_BASE_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP add people DN
+    |--------------------------------------------------------------------------
+    |
+    | The admin DN to use when adding people to the LDAP_ADD_BASE_DN subtree.
+    | If this value is left blank, the value of LDAP_DN will be used instead.
+    |
+    */
+    'add_dn' => env("LDAP_ADD_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP add people password
+    |--------------------------------------------------------------------------
+    |
+    | The password to use when adding people to the LDAP_ADD_BASE_DN subtree.
+    | If this value is left blank, the value of LDAP_PASSWORD will be used
+    | instead.
+    |
+    */
+    'add_pw' => env("LDAP_ADD_PW", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP modify people base DN
+    |--------------------------------------------------------------------------
+    |
+    | The base DN that will be used for modifying people in a subtree
+    |
+    */
+    'modify_base_dn' => env("LDAP_MODIFY_BASE_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP modify people DN
+    |--------------------------------------------------------------------------
+    |
+    | The admin DN to use when modifying people in the LDAP_MODIFY_BASE_DN
+    | subtree. If this value is left blank, the value of LDAP_ADD_DN will be
+    | used instead.
+    |
+    */
+    'modify_dn' => env("LDAP_MODIFY_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP modify people password
+    |--------------------------------------------------------------------------
+    |
+    | The password to use when modifying people in the LDAP_MODIFY_BASE_DN
+    | subtree. If this value is left blank, the value of LDAP_ADD_PW will be
+    | used instead.
+    |
+    */
+    'modify_pw' => env("LDAP_MODIFY_PW", ""),
+
 ];
