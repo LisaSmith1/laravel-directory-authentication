@@ -218,10 +218,30 @@ return [
     | LDAP modify people base DN
     |--------------------------------------------------------------------------
     |
-    | The base DN that will be used for modifying people in a subtree
+    | The base DN that will be used for modifying people in a subtree. If this
+    | value is left blank, the value of LDAP_ADD_BASE_DN will be used instead.
     |
     */
     'modify_base_dn' => env("LDAP_MODIFY_BASE_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP modify people method
+    |--------------------------------------------------------------------------
+    |
+    | The method that will be used for modifying people in the subtree from the
+    | LDAP_MODIFY_BASE_DN value. Allowed values are "self" and "admin".
+    |
+    | If the value is "self" then the binding user would be able to modify his
+    | own attributes in the directory.
+    |
+    | If the value is "admin" then the bind used would be made up of the
+    | combination of LDAP_MODIFY_DN and LDAP_MODIFY_PW.
+    |
+    | The default value is "self".
+    |
+    */
+    'modify_method' => env("LDAP_MODIFY_METHOD", "self"),
 
     /*
     |--------------------------------------------------------------------------
