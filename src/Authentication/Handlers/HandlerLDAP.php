@@ -23,6 +23,12 @@ class HandlerLDAP
 	private $dn;
 	private $password;
 
+	// array (potentially) of search base DNs, bind DNs, and passwords
+	private $host_array;
+	private $basedn_array;
+	private $dn_array;
+	private $password_array;
+
 	// values for searching
 	private $search_user_id;
 	private $search_username;
@@ -38,8 +44,9 @@ class HandlerLDAP
 	// LDAP version to use
 	private $version;
 
-	// overlay DN (if any)
+	// overlay DN (if any) and its matching array
 	private $overlay_dn;
+	private $overlaydn_array;
 
 	// base DN and credentials for adding entries to the directory
 	private $add_base_dn;
@@ -93,6 +100,13 @@ class HandlerLDAP
 		// set the overlay DN
 		$this->overlay_dn = "";
 
+		// generate the connection and bind arrays
+		$this->host_array = explode("|", $this->host);
+		$this->basedn_array = explode("|", $this->basedn);
+		$this->dn_array = explode("|", $this->dn);
+		$this->password_array = explode("|", $this->password);
+		$this->overlaydn_array = explode("|", $this->overlay_dn);
+
 		// set defaults for the add and modify operations
 		$this->setDefaultManipulationInformation();
 	}
@@ -103,7 +117,7 @@ class HandlerLDAP
 	 * defaults in case the specific setter methods are not invoked.
 	 */
 	private function setDefaultManipulationInformation() {
-		$this->add_base_dn = $this->basedn;
+		$this->add_base_dn = $this->basedn_array;
 		$this->add_dn = $this->dn;
 		$this->add_pw = $this->password;
 
@@ -163,9 +177,12 @@ class HandlerLDAP
 			// if override parameters have been specified then use those
 			// for the binding operation
 			if(!empty($username)) {
-
-				// bind by uid
-				$selectedUsername = $this->search_username . "=" . $username . "," . $this->basedn;
+				// bind by uid; append the overlay DN if one has been specified
+				$selectedUsername = $this->search_username . "=" .
+					$username . "," . $this->basedn;
+				if(!empty($this->overlay_dn)) {
+					$selectedUsername .= "," . $this->overlay_dn;
+				}
 
 				$selectedPassword = "";
 
@@ -207,6 +224,21 @@ class HandlerLDAP
 
 		// something else went wrong
 		return false;
+	}
+
+	/**
+	 * Connects and binds to the LDAP server based on the provided DN and an
+	 * optional password. Returns whether the connection and binding were
+	 * successful.
+	 *
+	 * @param string $dn The bind DN to use
+	 * @param string $password An optional password to use
+	 *
+	 * @throws Exception If the LDAP connection fails
+	 * @return boolean
+	 */
+	public function connectByDN($dn, $password="") {
+
 	}
 
 	/**
@@ -402,6 +434,8 @@ class HandlerLDAP
 
 	/**
 	 * Sets the modification method. This can be either "admin" or "self".
+	 * If this is set to "admin" you will also need to set the modify DN
+	 * as well as the modify password.
 	 *
 	 * @param string $modify_method The modify method to use
 	 */
