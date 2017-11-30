@@ -184,10 +184,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP add people base DN
+    | LDAP add object base DN
     |--------------------------------------------------------------------------
     |
-    | The base DN that will be used for adding people to a subtree. If this
+    | The base DN that will be used for adding objects to a subtree. If this
     | value is left blank, the value of LDAP_BASE_DN will be used instead.
     |
     */
@@ -195,10 +195,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP add people DN
+    | LDAP add object DN
     |--------------------------------------------------------------------------
     |
-    | The admin DN to use when adding people to the LDAP_ADD_BASE_DN subtree.
+    | The admin DN to use when adding objects to the LDAP_ADD_BASE_DN subtree.
     | If this value is left blank, the value of LDAP_DN will be used instead.
     |
     */
@@ -206,10 +206,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP add people password
+    | LDAP add object password
     |--------------------------------------------------------------------------
     |
-    | The password to use when adding people to the LDAP_ADD_BASE_DN subtree.
+    | The password to use when adding objects to the LDAP_ADD_BASE_DN subtree.
     | If this value is left blank, the value of LDAP_PASSWORD will be used
     | instead.
     |
@@ -218,22 +218,11 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP modify people base DN
+    | LDAP modify object method
     |--------------------------------------------------------------------------
     |
-    | The base DN that will be used for modifying people in a subtree. If this
-    | value is left blank, the value of LDAP_ADD_BASE_DN will be used instead.
-    |
-    */
-    'modify_base_dn' => env("LDAP_MODIFY_BASE_DN", ""),
-
-    /*
-    |--------------------------------------------------------------------------
-    | LDAP modify people method
-    |--------------------------------------------------------------------------
-    |
-    | The method that will be used for modifying people in the subtree from the
-    | LDAP_MODIFY_BASE_DN value. Allowed values are "self" and "admin".
+    | The method that will be used for modifying objects in the subtree from
+    | the LDAP_MODIFY_BASE_DN value. Allowed values are "self" and "admin".
     |
     | If the value is "self" then the binding user would be able to modify his
     | own attributes in the directory.
@@ -248,10 +237,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP modify people DN
+    | LDAP modify object base DN
     |--------------------------------------------------------------------------
     |
-    | The admin DN to use when modifying people in the LDAP_MODIFY_BASE_DN
+    | The base DN that will be used for modifying objects in a subtree. If this
+    | value is left blank, the value of LDAP_ADD_BASE_DN will be used instead.
+    |
+    */
+    'modify_base_dn' => env("LDAP_MODIFY_BASE_DN", ""),
+
+    /*
+    |--------------------------------------------------------------------------
+    | LDAP modify object DN
+    |--------------------------------------------------------------------------
+    |
+    | The admin DN to use when modifying objects in the LDAP_MODIFY_BASE_DN
     | subtree. If this value is left blank, the value of LDAP_ADD_DN will be
     | used instead.
     |
@@ -260,10 +260,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | LDAP modify people password
+    | LDAP modify object password
     |--------------------------------------------------------------------------
     |
-    | The password to use when modifying people in the LDAP_MODIFY_BASE_DN
+    | The password to use when modifying objects in the LDAP_MODIFY_BASE_DN
     | subtree. If this value is left blank, the value of LDAP_ADD_PW will be
     | used instead.
     |

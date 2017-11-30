@@ -38,6 +38,22 @@ class HandlerLDAP
 	// LDAP version to use
 	private $version;
 
+	// overlay DN (if any)
+	private $overlay_dn;
+
+	// base DN and credentials for adding entries to the directory
+	private $add_base_dn;
+	private $add_dn;
+	private $add_pw;
+
+	// modification method
+	private $modify_method;
+
+	// base DN and credentials for modifying entries in the directory
+	private $modify_base_dn;
+	private $modify_dn;
+	private $modify_pw;
+
 	/**
 	 * Constructs a new HandlerLDAP object.
 	 *
@@ -71,7 +87,30 @@ class HandlerLDAP
 
 		// set the default auth search query
 		$this->search_auth_query = "(|(" . $search_username . 
-			"=%s)(" . $search_mail_array . "=%s))";
+			"=%s)(" . $search_mail . "=%s)(" .
+				$search_mail_array . "=%s))";
+
+		// set the overlay DN
+		$this->overlay_dn = "";
+
+		// set defaults for the add and modify operations
+		$this->setDefaultManipulationInformation();
+	}
+
+	/**
+	 * Sets the base DN and credentials for add and modify operations based
+	 * on the search base DN and credentials. This is done to provide sensible
+	 * defaults in case the specific setter methods are not invoked.
+	 */
+	private function setDefaultManipulationInformation() {
+		$this->add_base_dn = $this->basedn;
+		$this->add_dn = $this->dn;
+		$this->add_pw = $this->password;
+
+		$this->modify_method = "self";
+		$this->modify_base_dn = $this->add_base_dn;
+		$this->modify_dn = $this->add_dn;
+		$this->modify_pw = $this->add_pw;
 	}
 
 	/**
@@ -303,5 +342,124 @@ class HandlerLDAP
 	 */
 	public function setVersion($version) {
 		$this->version = $version;
+	}
+
+	/**
+	 * Sets the overlay DN to use for search, add, and modify.
+	 *
+	 * @param string $overlay_dn The overlay DN to use
+	 */
+	public function setOverlayDN($overlay_dn) {
+		$this->overlay_dn = $overlay_dn;
+	}
+
+	/**
+	 * Sets the base DN for add operations in a subtree.
+	 *
+	 * @param string $add_base_dn The base DN for add operations
+	 */
+	public function setAddBaseDN($add_base_dn) {
+		if(!empty($add_base_dn)) {
+			$this->add_base_dn = $add_base_dn;
+		}
+		else
+		{
+			$this->add_base_dn = $this->basedn;
+		}
+	}
+
+	/**
+	 * Sets the admin DN for add operations in a subtree. If the parameter is
+	 * left empty, the search admin DN will be used instead.
+	 *
+	 * @param string $add_dn The admin DN for add operations
+	 */
+	public function setAddDN($add_dn) {
+		if(!empty($add_dn)) {
+			$this->add_dn = $add_dn;
+		}
+		else
+		{
+			$this->add_dn = $this->dn;
+		}
+	}
+
+	/**
+	 * Sets the admin password for add operations in a subtree. If the
+	 * parameter is left empty, the search admin password will be used instead.
+	 *
+	 * @param string $add_pw The admin password for add operations
+	 */
+	public function setAddPassword($add_pw) {
+		if(!empty($add_pw)) {
+			$this->add_pw = $add_pw;
+		}
+		else
+		{
+			$this->add_pw = $this->password;
+		}
+	}
+
+	/**
+	 * Sets the modification method. This can be either "admin" or "self".
+	 *
+	 * @param string $modify_method The modify method to use
+	 */
+	public function setModifyMethod($modify_method) {
+		if($modify_method == "admin") {
+			$this->modify_method = $modify_method;
+		}
+		else
+		{
+			$this->modify_method = "self";
+		}
+	}
+
+	/**
+	 * Sets the base DN for modify operations in a subtree. If the parameter is
+	 * left empty, the add base DN will be used instead.
+	 *
+	 * @param string $modify_base_dn The base DN for modify operations
+	 */
+	public function setModifyBaseDN($modify_base_dn) {
+		if(!empty($modify_base_dn)) {
+			$this->modify_base_dn = $modify_base_dn;
+		}
+		else
+		{
+			$this->modify_base_dn = $this->add_base_dn;
+		}
+	}
+
+	/**
+	 * Sets the admin DN for modify operations in a subtree. If the parameter
+	 * is left empty, the add admin DN will be used instead.
+	 *
+	 * @param string $modify_dn The admin DN for modify operations
+	 */
+	public function setModifyDN($modify_dn) {
+		if(!empty($modify_dn)) {
+			$this->modify_dn = $modify_dn;
+		}
+		else
+		{
+			$this->modify_dn = $this->add_dn;
+		}
+	}
+
+	/**
+	 * Sets the admin password for modify operations in a subtree. If the
+	 * parameter is left empty, the add admin password will be used instead.
+	 *
+	 * @param string $modify_dn The admin password for modify operations
+	 */
+	public function setModifyPassword($modify_pw) {
+		if(!empty($modify_pw)) {
+			$this->modify_pw = $modify_pw;
+		}
+		else
+		{
+			$this->modify_pw = $this->add_pw;
+		}
 	}
 }

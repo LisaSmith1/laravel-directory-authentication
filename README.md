@@ -185,7 +185,7 @@ Default is `mailLocalAddress`.
 
 ### LDAP_SEARCH_USER_QUERY
 
-Optional search query that will replace the default query executed by the package during user directory searches. If not specified, the query that will be used is the equivalent of `(|(uid=%s)(mailLocalAddress=%s))` depending on the values of `LDAP_SEARCH_USERNAME` and `LDAP_SEARCH_MAIL_ARRAY`.
+Optional search query that will replace the default query executed by the package during user directory searches. If not specified, the query that will be used is the equivalent of `(|(uid=%s)(mail=%s)(mailLocalAddress=%s))` depending on the values of `LDAP_SEARCH_USERNAME`, `LDAP_SEARCH_MAIL`, and `LDAP_SEARCH_MAIL_ARRAY`.
 
 If specified, this query needs to be a `vsprintf()`-compatible string and use `%s` as the placeholder for the search value.
 
