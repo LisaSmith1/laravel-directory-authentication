@@ -39,7 +39,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | The admin DN to use when searching for people. This is only used when
-    | user password validation is turned off (so searching can still happen)
+    | user password validation is turned off (so searching can still happen) or
+    | as a fallback for user account manipulation.
     |
     */
     'dn' => env("LDAP_DN", ""),
@@ -51,6 +52,7 @@ return [
     |
     | The admin password to use when searching for people. This is only used
     | when user password validation is turned off (so searching can still happen)
+    | or as a fallback for user account manipulation.
     |
     */
     'password' => env("LDAP_PASSWORD", ""),

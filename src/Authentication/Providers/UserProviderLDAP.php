@@ -154,8 +154,9 @@ class UserProviderLDAP implements UserProvider
     	}
     	catch(Exception $e)
     	{
-    		// LDAP connection failure
-    		return null;
+    		// LDAP connection or DB access failure, so bubble up the exception
+    		// instead of letting it die here; this will assist in debugging
+    		throw $e;
     	}
 
     	// invalid login attempt
