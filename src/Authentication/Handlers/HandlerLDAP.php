@@ -24,7 +24,6 @@ class HandlerLDAP
 	private $password;
 
 	// array (potentially) of search base DNs, bind DNs, and passwords
-	private $host_array;
 	private $basedn_array;
 	private $dn_array;
 	private $password_array;
@@ -100,8 +99,7 @@ class HandlerLDAP
 		// set the overlay DN
 		$this->overlay_dn = "";
 
-		// generate the connection and bind arrays
-		$this->host_array = explode("|", $this->host);
+		// generate the various DN and bind arrays
 		$this->basedn_array = explode("|", $this->basedn);
 		$this->dn_array = explode("|", $this->dn);
 		$this->password_array = explode("|", $this->password);
@@ -238,7 +236,36 @@ class HandlerLDAP
 	 * @return boolean
 	 */
 	public function connectByDN($dn, $password="") {
+		$params = array(
+		    'hostname'  => $this->host,
+		    'options' => [
+		    	ConnectionInterface::OPT_PROTOCOL_VERSION => $this->version,
+		    ],
+		);
+		$this->ldap = new Manager($params, new Driver());
 
+		// connect to the server and bind with the credentials
+		try
+		{
+			$this->ldap->connect();
+			$this->bind($dn, $password);
+
+			// if it hits this return then the connection was successful and
+			// the binding was also successful
+			return true;
+		}
+		catch(BindException $be)
+		{
+			// could not bind with the provided credentials
+			return false;
+		}
+		catch(Exception $e)
+		{
+			throw $e;
+		}
+
+		// something else went wrong
+		return false;
 	}
 
 	/**
