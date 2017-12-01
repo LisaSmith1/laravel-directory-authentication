@@ -7,7 +7,8 @@ use Exception;
 use Toyota\Component\Ldap\Core\Manager,
 	Toyota\Component\Ldap\Core\Node,
     Toyota\Component\Ldap\Platform\Native\Driver,
-    Toyota\Component\Ldap\Exception\BindException;
+    Toyota\Component\Ldap\Exception\BindException,
+    Toyota\Component\Ldap\Exception\NodeNotFoundException;
 
 use Toyota\Component\Ldap\API\ConnectionInterface;
 
@@ -398,20 +399,28 @@ class HandlerLDAP
 
 		// generate a new node and set its DN within the add subtree
 		$node = new Node();
-		$node->setDn(
-			$this->search_username . '=' . $identifier . ',' .
-				$this->add_base_dn
-		);
+		$dn = $this->search_username . '=' . $identifier . ',' .
+				$this->add_base_dn;
+		$node->setDn($dn);
 
-		// iterate over the attributes and add them to the node
-		foreach($attributes as $key => $value) {
-			// this can handle both arrays of values as well as single values
-			// to be added for the record
-			$node->get($key, true)->add($value);
+		// if the node already exists we want to return false to prevent any
+		// potential updates (as updates would be performed by modifyObject())
+		try {
+			$this->ldap->getNode($dn);
+			return false;
 		}
+		catch(NodeNotFoundException $e) {
+			// iterate over the attributes and add them to the node
+			foreach($attributes as $key => $value) {
+				// this can handle both arrays of values as well as single values
+				// to be added for the record
+				$node->get($key, true)->add($value);
+			}
 
-		// save the node into the store
-		$this->ldap->save($node);
+			// save the node into the store
+			$this->ldap->save($node);
+			return true;
+		}
 	}
 
 	/**
