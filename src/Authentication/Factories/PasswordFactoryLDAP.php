@@ -2,6 +2,8 @@
 
 namespace CSUNMetaLab\Authentication\Factories;
 
+use Exception;
+
 /**
  * Factory class that generates and returns hashes to be used with LDAP
  * passwords.
@@ -27,7 +29,7 @@ class PasswordFactoryLDAP
 			else
 			{
 				throw new Exception(
-					"You must have the openssl extension installed and loaded to use a random salt"
+					"You must have the openssl extension installed and enabled to use a random salt"
 				);
 			}
 		}
