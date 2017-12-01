@@ -5,6 +5,7 @@ namespace CSUNMetaLab\Authentication\Handlers;
 use Exception;
 
 use Toyota\Component\Ldap\Core\Manager,
+	Toyota\Component\Ldap\Core\Node,
     Toyota\Component\Ldap\Platform\Native\Driver,
     Toyota\Component\Ldap\Exception\BindException;
 
@@ -160,7 +161,6 @@ class HandlerLDAP
 	public function connect($username="", $password="") {
 		$params = array(
 		    'hostname'  => $this->host,
-		    'base_dn'   => $this->basedn,
 		    'options' => [
 		    	ConnectionInterface::OPT_PROTOCOL_VERSION => $this->version,
 		    ],
@@ -300,7 +300,7 @@ class HandlerLDAP
     /**
 	 * Queries LDAP for the record with the specified value for attributes
 	 * matching what could commonly be used for authentication. For the
-	 * purposes of this method, uid and mailLocalAddress are searched by
+	 * purposes of this method, uid, mail and mailLocalAddress are searched by
 	 * default unless their values have been overridden.
 	 *
 	 * @param string $value The value to use for searching
@@ -312,9 +312,22 @@ class HandlerLDAP
 		$numArgs = substr_count($this->search_auth_query, "%s");
 		$args = array_fill(0, $numArgs, $value);
 
-		// format the string and then perform the search
+		// format the string and then perform the search for each base DN
 		$searchStr = vsprintf($this->search_auth_query, $args);
-		$results = $this->ldap->search($this->basedn, $searchStr);
+
+		// iterate over the array of base DNs and perform the searches; we will
+		// return the first result set that matches our query
+		$results = null;
+		foreach($this->basedn_array as $basedn) {
+			$results = $this->ldap->search($this->basedn, $searchStr);
+			if($this->isValidResult($results)) {
+				return $results;
+			}
+		}
+
+		// ensures that there is some result set that is returned based upon
+		// one of the loop iterations even if we did not match our desired
+		// condition
 		return $results;
 	}
 
@@ -366,6 +379,56 @@ class HandlerLDAP
 	}
 
 	/**
+	 * Adds an object into the add subtree using the specified identifier and
+	 * an associative array of attributes. Returns a boolean describing whether
+	 * the operation was successful. Throws an exception if the bind fails.
+	 *
+	 * @param string $identifier The value to use as the "username" identifier
+	 * @param array $attributes Associative array of attributes to add
+	 *
+	 * @return bool
+	 * @throws BindException
+	 */
+	public function addObject($identifier, $attributes) {
+		// bind using the add credentials
+		$this->bind(
+			$this->add_dn,
+			$this->add_pw
+		);
+
+		// generate a new node and set its DN within the add subtree
+		$node = new Node();
+		$node->setDn(
+			$this->search_username . '=' . $identifier . ',' .
+				$this->add_base_dn
+		);
+
+		// iterate over the attributes and add them to the node
+		foreach($attributes as $key => $value) {
+			// this can handle both arrays of values as well as single values
+			// to be added for the record
+			$node->get($key, true)->add($value);
+		}
+
+		// save the node into the store
+		$this->ldap->save($node);
+	}
+
+	/**
+	 * Modifies an object in the modify subtree using the specified identifier
+	 * and an associative array of attributes. Returns a boolean describing
+	 * whether the operation was successful.
+	 *
+	 * @param string $identifier The value to use as the "username" identifier
+	 * @param array $attributes Associative array of attributes to modify
+	 *
+	 * @return bool
+	 */
+	public function modifyObject($identifier, $attributes) {
+
+	}
+
+	/**
 	 * Sets whether blank passwords are allowed for binding attempts.
 	 *
 	 * @param boolean $allowNoPass Whether to allow blank passwords
@@ -392,6 +455,7 @@ class HandlerLDAP
 	 */
 	public function setBaseDN($basedn) {
 		$this->basedn = $basedn;
+		$this->basedn_array = explode("|", $basedn);
 	}
 
 	/**

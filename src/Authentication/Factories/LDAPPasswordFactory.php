@@ -8,7 +8,7 @@ use Exception;
  * Factory class that generates and returns hashes to be used with LDAP
  * passwords.
  */
-class PasswordFactoryLDAP
+class LDAPPasswordFactory
 {
 	/**
 	 * Generates and returns a new password as a SSHA hash for use in LDAP. If
