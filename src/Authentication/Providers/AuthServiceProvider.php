@@ -22,21 +22,8 @@ class AuthServiceProvider extends ServiceProvider
 	 * @return void
 	 */
 	public function register() {
-
-	}
-
-	/**
-	 * Bootstrap the application events.
-	 *
-	 * @return void
-	 */
-	public function boot() {
-		$this->publishes([
-        	__DIR__.'/../config/ldap.php' => config_path('ldap.php'),
-    	]);
-
-    	// if the provider method exists then we are at least in Laravel 5.1
-		if(method_exists('Illuminate\Auth\Guard', 'provider')) {
+		// if the provider method exists then we are at least in Laravel 5.1
+		if(method_exists('Illuminate\Auth\AuthManager', 'provider')) {
 			// LDAP auth extension
 			Auth::provider('ldap', function($app, array $config) {
 				return new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP();
@@ -50,6 +37,17 @@ class AuthServiceProvider extends ServiceProvider
 					App::make('session.store'));
 			});
 		}
+	}
+
+	/**
+	 * Bootstrap the application events.
+	 *
+	 * @return void
+	 */
+	public function boot() {
+		$this->publishes([
+        	__DIR__.'/../config/ldap.php' => config_path('ldap.php'),
+    	]);
 	}
 
 	/**
