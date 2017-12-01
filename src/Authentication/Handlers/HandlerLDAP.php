@@ -457,11 +457,14 @@ class HandlerLDAP
 	 * @throws BindException
 	 */
 	public function modifyObject($identifier, $attributes) {
-		// bind using the modify credentials
-		$this->bind(
-			$this->modify_dn,
-			$this->modify_pw
-		);
+		// bind using the modify credentials if anything other than "self"
+		// has been set as the method
+		if($this->modify_method != "self") {
+			$this->bind(
+				$this->modify_dn,
+				$this->modify_pw
+			);
+		}
 
 		// ensure the node exists before we perform an update since addition
 		// of nodes would be handled by addObject() instead
