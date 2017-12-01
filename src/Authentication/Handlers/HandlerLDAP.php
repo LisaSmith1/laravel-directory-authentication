@@ -4,6 +4,8 @@ namespace CSUNMetaLab\Authentication\Handlers;
 
 use Exception;
 
+use CSUNMetaLab\Authentication\Factories\LDAPPasswordFactory;
+
 use Toyota\Component\Ldap\Core\Manager,
 	Toyota\Component\Ldap\Core\Node,
     Toyota\Component\Ldap\Platform\Native\Driver,
@@ -400,7 +402,7 @@ class HandlerLDAP
 		// generate a new node and set its DN within the add subtree
 		$node = new Node();
 		$dn = $this->search_username . '=' . $identifier . ',' .
-				$this->add_base_dn;
+			$this->add_base_dn;
 		$node->setDn($dn);
 
 		// if the node already exists we want to return false to prevent any
@@ -426,15 +428,71 @@ class HandlerLDAP
 	/**
 	 * Modifies an object in the modify subtree using the specified identifier
 	 * and an associative array of attributes. Returns a boolean describing
-	 * whether the operation was successful.
+	 * whether the operation was successful. Throws an exception if the bind
+	 * fails.
 	 *
 	 * @param string $identifier The value to use as the "username" identifier
 	 * @param array $attributes Associative array of attributes to modify
 	 *
 	 * @return bool
+	 * @throws BindException
 	 */
 	public function modifyObject($identifier, $attributes) {
+		// bind using the modify credentials
+		$this->bind(
+			$this->modify_dn,
+			$this->modify_pw
+		);
 
+		// ensure the node exists before we perform an update since addition
+		// of nodes would be handled by addObject() instead
+		$dn = $this->search_username . '=' . $identifier . ',' .
+			$this->modify_base_dn;
+		try
+		{
+			$node = $this->ldap->getNode($dn);
+
+			// iterate over the attributes and apply the changes. If an
+			// attribute already exists, set its value; otherwise, add the
+			// new value
+			foreach($attributes as $key => $value) {
+				if($node->has($key)) {
+					$node->get($key)->set($value);
+				}
+				else
+				{
+					$node->get($key, true)->add($value);
+				}
+			}
+
+			// save the node into the store
+			$this->ldap->save($node);
+			return true;
+		}
+		catch(NodeNotFoundException $e) {
+			// node does not exist
+			return false;
+		}
+	}
+
+	/**
+	 * Modifies the password of an object in the modify subtree using the
+	 * specified identifier and a plaintext password. The password will be
+	 * hashed using the SSHA algorithm. Returns a boolean describing whether
+	 * the operation was successful. Throws an exception if the bind fails.
+	 *
+	 * This method is merely a convenience method for modifyObject().
+	 *
+	 * @param string $identifier The value to use as the "username" identifier
+	 * @param string $password The plaintext password to use
+	 *
+	 * @return bool
+	 * @throws BindException
+	 */
+	public function modifyObjectPassword($identifier, $password) {
+		return $this->modifyObject($identifier, [
+			'userPassword' => LDAPPasswordFactory::SSHA($password),
+		]);
 	}
 
 	/**
