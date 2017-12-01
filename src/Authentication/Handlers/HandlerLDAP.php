@@ -47,9 +47,8 @@ class HandlerLDAP
 	// LDAP version to use
 	private $version;
 
-	// overlay DN (if any) and its matching array
+	// overlay DN (if any)
 	private $overlay_dn;
-	private $overlaydn_array;
 
 	// base DN and credentials for adding entries to the directory
 	private $add_base_dn;
@@ -107,7 +106,6 @@ class HandlerLDAP
 		$this->basedn_array = explode("|", $this->basedn);
 		$this->dn_array = explode("|", $this->dn);
 		$this->password_array = explode("|", $this->password);
-		$this->overlaydn_array = explode("|", $this->overlay_dn);
 
 		// set defaults for the add and modify operations
 		$this->setDefaultManipulationInformation();
@@ -164,10 +162,17 @@ class HandlerLDAP
 	public function connect($username="", $password="") {
 		$params = array(
 		    'hostname'  => $this->host,
+		    'base_dn' => $this->basedn,
 		    'options' => [
 		    	ConnectionInterface::OPT_PROTOCOL_VERSION => $this->version,
 		    ],
 		);
+
+		// if there is an overlay, use that as the base DN instead
+		if(!empty($this->overlay_dn)) {
+			$params['basedn'] = $this->overlay_dn;
+		}
+
 		$this->ldap = new Manager($params, new Driver());
 
 		// connect to the server and bind with the credentials
@@ -241,10 +246,17 @@ class HandlerLDAP
 	public function connectByDN($dn, $password="") {
 		$params = array(
 		    'hostname'  => $this->host,
+		    'base_dn' => $this->basedn,
 		    'options' => [
 		    	ConnectionInterface::OPT_PROTOCOL_VERSION => $this->version,
 		    ],
 		);
+
+		// if there is an overlay, use that as the base DN instead
+		if(!empty($this->overlay_dn)) {
+			$params['basedn'] = $this->overlay_dn;
+		}
+
 		$this->ldap = new Manager($params, new Driver());
 
 		// connect to the server and bind with the credentials
@@ -322,7 +334,14 @@ class HandlerLDAP
 		// return the first result set that matches our query
 		$results = null;
 		foreach($this->basedn_array as $basedn) {
-			$results = $this->ldap->search($this->basedn, $searchStr);
+			$basedn = $this->basedn;
+
+			// add the overlay if it exists
+			if(!empty($this->overlay_dn)) {
+				$basedn .= ',' . $this->overlay_dn;
+			}
+
+			$results = $this->ldap->search($basedn, $searchStr);
 			if($this->isValidResult($results)) {
 				return $results;
 			}
@@ -457,6 +476,8 @@ class HandlerLDAP
 			// new value
 			foreach($attributes as $key => $value) {
 				if($node->has($key)) {
+					// if the value is either null or an empty array, just
+					// remove the attribute; otherwise, set it to a value
 					$node->get($key)->set($value);
 				}
 				else
