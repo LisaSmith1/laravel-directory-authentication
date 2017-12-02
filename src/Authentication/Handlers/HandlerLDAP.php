@@ -170,7 +170,7 @@ class HandlerLDAP
 
 		// if there is an overlay, use that as the base DN instead
 		if(!empty($this->overlay_dn)) {
-			$params['basedn'] = $this->overlay_dn;
+			$params['base_dn'] = $this->overlay_dn;
 		}
 
 		$this->ldap = new Manager($params, new Driver());
@@ -183,35 +183,60 @@ class HandlerLDAP
 			// if override parameters have been specified then use those
 			// for the binding operation
 			if(!empty($username)) {
-				// bind by uid; append the overlay DN if one has been specified
-				$selectedUsername = $this->search_username . "=" .
-					$username . "," . $this->basedn;
-				if(!empty($this->overlay_dn)) {
-					$selectedUsername .= "," . $this->overlay_dn;
-				}
+				foreach($this->basedn_array as $basedn) {
+					try
+					{
+						// bind by uid; append the overlay DN if one has been specified
+						$selectedUsername = $this->search_username . "=" .
+							$username;
+						if(!empty($basedn)) {
+							$selectedUsername .= "," . $basedn;
+						}
 
-				$selectedPassword = "";
+						$selectedPassword = "";
 
-				// do we allow empty passwords for bind attempts?
-				if(empty($password)) {
-					if($this->allowNoPass) {
-						// yes so use the constructor-provided DN and password
-						$selectedUsername = $this->dn;
-						$selectedPassword = $this->password;
+						// do we allow empty passwords for bind attempts?
+						if(empty($password)) {
+							if($this->allowNoPass) {
+								// yes so use the constructor-provided DN and password
+								$selectedUsername = $this->dn;
+								$selectedPassword = $this->password;
+							}
+						}
+						else
+						{
+							// password provided so use what we were given
+							$selectedPassword = $password;
+						}
+
+						// append the overlay DN if it exists
+						if(!empty($this->overlay_dn)) {
+							$selectedUsername .= "," . $this->overlay_dn;
+						}
+
+						// now perform the bind
+						$this->bind($selectedUsername, $selectedPassword);
+
+						// if we get here without hitting an exception, the bind
+						// was successful
+						return true;
+					}
+					catch(BindException $e) {
+						// just because we hit a bind exception it doesn't mean
+						// that there was an error; this could have been the
+						// result of bad credentials so we will continue with
+						// the next element in the array
 					}
 				}
-				else
-				{
-					// password provided so use what we were given
-					$selectedPassword = $password;
-				}
-
-				// now perform the bind
-				$this->bind($selectedUsername, $selectedPassword);
 			}
 			else
 			{
-				$this->bind($this->dn, $this->password);
+				// use the admin bind credentials
+				$dn = $this->dn;
+				if(!empty($this->overlay_dn)) {
+					$dn .= "," . $this->overlay_dn;
+				}
+				$this->bind($dn, $this->password);
 			}
 
 			// if it hits this return then the connection was successful and
@@ -220,7 +245,7 @@ class HandlerLDAP
 		}
 		catch(BindException $be)
 		{
-			// could not bind with the provided credentials
+			// could not bind with the provided credentials (admin bind)
 			return false;
 		}
 		catch(Exception $e)
@@ -228,6 +253,7 @@ class HandlerLDAP
 			throw $e;
 		}
 
+		// could not bind with the provided credentials (regular user bind) or
 		// something else went wrong
 		return false;
 	}
@@ -254,7 +280,7 @@ class HandlerLDAP
 
 		// if there is an overlay, use that as the base DN instead
 		if(!empty($this->overlay_dn)) {
-			$params['basedn'] = $this->overlay_dn;
+			$params['base_dn'] = $this->overlay_dn;
 		}
 
 		$this->ldap = new Manager($params, new Driver());
@@ -263,6 +289,20 @@ class HandlerLDAP
 		try
 		{
 			$this->ldap->connect();
+
+			// if we do not have a password specified, use the admin DN and
+			// password for the connection operation
+			if(empty($password)) {
+				if($this->allowNoPass) {
+					// yes so use the constructor-provided DN and password
+					$dn = $this->dn;
+					if(!empty($this->overlay_dn)) {
+						$dn .= "," . $this->overlay_dn;
+					}
+					$password = $this->password;
+				}
+			}
+
 			$this->bind($dn, $password);
 
 			// if it hits this return then the connection was successful and
@@ -293,6 +333,10 @@ class HandlerLDAP
 	 */
     public function getAttributeFromResults($results, $attr_name) {
         foreach($results as $node) {
+        	if($attr_name == "dn") {
+        		return $node->getDn();
+        	}
+
             foreach($node->getAttributes() as $attribute) {
                 if (strtolower($attribute->getName()) == strtolower($attr_name)) {
                     return $attribute->getValues()[0]; // attribute found
@@ -334,11 +378,17 @@ class HandlerLDAP
 		// return the first result set that matches our query
 		$results = null;
 		foreach($this->basedn_array as $basedn) {
-			$basedn = $this->basedn;
-
 			// add the overlay if it exists
 			if(!empty($this->overlay_dn)) {
-				$basedn .= ',' . $this->overlay_dn;
+				// append the overlay if we do have a base DN or use the
+				// overlay as the base DN if not
+				if(!empty($basedn)) {
+					$basedn .= ',' . $this->overlay_dn;
+				}
+				else
+				{
+					$basedn = $this->overlay_dn;
+				}
 			}
 
 			$results = $this->ldap->search($basedn, $searchStr);

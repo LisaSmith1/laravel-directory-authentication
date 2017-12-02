@@ -120,6 +120,7 @@ class UserProviderLDAP implements UserProvider
 	    		// if the user does not exist in the database (but only if the configuration
 	    		// has been set up to do so)
 	    		$user = $m::findForAuth($this->search_db_user_id_prefix . $emplId);
+	    		dd($user);
 	    		if(empty($user)) {
 	    			if($this->return_fake_user_instance) {
 	    				$user = new $m();
@@ -200,13 +201,13 @@ class UserProviderLDAP implements UserProvider
 		$this->ldap->connect();
 
 		$result = $this->ldap->searchByAuth($username);
+		//dd($result);
 
-		// now we have to retrieve the uid and use that as
-		// the username
-		$username = $this->ldap->getAttributeFromResults($result, $this->search_username);
+		// now we have to retrieve the DN and use that to bind
+		$dn = $this->ldap->getAttributeFromResults($result, 'dn');
 
-		// perform the bind with the uid/password combination
-		return $this->ldap->connect($username, $password);
+		// perform the bind with the DN/password combination
+		return $this->ldap->connectByDN($dn, $password);
 	}
 
 	/**
