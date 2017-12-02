@@ -24,7 +24,7 @@ class LDAPPasswordFactory
 		if(empty($salt)) {
 			if(function_exists('openssl_random_pseudo_bytes')) {
 				// salts should be four bytes
-				$salt = openssl_random_pseudo_bytes(4);
+				$salt = bin2hex(openssl_random_pseudo_bytes(4));
 			}
 			else
 			{

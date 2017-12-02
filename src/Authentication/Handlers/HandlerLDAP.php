@@ -117,7 +117,7 @@ class HandlerLDAP
 	 * defaults in case the specific setter methods are not invoked.
 	 */
 	private function setDefaultManipulationInformation() {
-		$this->add_base_dn = $this->basedn_array;
+		$this->add_base_dn = $this->basedn_array[0];
 		$this->add_dn = $this->dn;
 		$this->add_pw = $this->password;
 
