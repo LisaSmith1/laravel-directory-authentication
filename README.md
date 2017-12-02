@@ -15,6 +15,9 @@ Once the user has been authenticated via the directory service a local database 
 * [Creating a Custom User Class](#creating-a-custom-user-class)
 * [Authenticating](#authenticating)
 * [Masquerading](#masquerading)
+* [Adding New LDAP Records](#adding-new-ldap-records)
+* [Modifying Existing LDAP Records](#modifying-existing-ldap-records)
+* [Modifying LDAP User Passwords](#modifying-ldap-user-passwords)
 
 ## Installation
 
@@ -206,6 +209,68 @@ If `true`, a user instance will be returned with LDAP attributes that can then b
 If `false`, the authentication attempt will fail outright if the user is not in the database because `Auth::attempt()` will return `false`.
 
 Default is `false`.
+
+### LDAP_OVERLAY_DN
+
+Overlay DN to give a consistent logical root for the search, add and modify subtrees in the directory.
+
+Default is a blank string.
+
+### LDAP_ADD_BASE_DN
+
+The base DN that will be used for adding objects to a subtree.
+
+If this value is left blank, the value of `LDAP_BASE_DN` will be used instead.
+
+Default is a blank string.
+
+### LDAP_ADD_DN
+
+The admin DN to use when adding objects to the `LDAP_ADD_BASE_DN` subtree.
+
+If this value is left blank, the value of `LDAP_DN` will be used instead.
+
+Default is a blank string.
+
+### LDAP_ADD_PW
+
+The password to use when adding objects to the `LDAP_ADD_BASE_DN` subtree.
+
+If this value is left blank, the value of `LDAP_PASSWORD` will be used instead.
+
+Default is a blank string.
+
+### LDAP_MODIFY_METHOD
+
+The method that will be used for modifying objects in the subtree from the `LDAP_MODIFY_BASE_DN` value. Allowed values are `self` and `admin`.
+
+If the value is `self` then the binding user would be able to modify his own attributes in the directory.
+
+If the value is `admin` then the bind used would be made up of the combination of `LDAP_MODIFY_DN` and `LDAP_MODIFY_PW`.
+
+Default is `self`.
+
+### LDAP_MODIFY_BASE_DN
+
+The base DN that will be used for modifying objects in a subtree. If this value is left blank, the value of `LDAP_ADD_BASE_DN` will be used instead.
+
+Default is a blank string.
+
+### LDAP_MODIFY_DN
+
+The admin DN to use when modifying objects in the `LDAP_MODIFY_BASE_DN` subtree.
+
+If this value is left blank, the value of `LDAP_ADD_DN` will be used instead.
+
+Default is a blank string.
+
+### LDAP_MODIFY_PW
+
+The password to use when modifying objects in the `LDAP_MODIFY_BASE_DN` subtree.
+
+If this value is left blank, the value of `LDAP_ADD_PW` will be used instead.
+
+Default is a blank string.
 
 ## The `HandlerLDAP` Class
 
@@ -511,3 +576,153 @@ else
 ```
 
 Calls to `Auth::user()` will now once again report the original logged-in user.
+
+## Adding New LDAP Records
+
+This package will attempt to use the information configured in the following three `.env` values first when performing add operations:
+
+* `LDAP_ADD_BASE_DN`: the subtree where new entries will be added. If this is left empty, the value of `LDAP_BASE_DN` will be used instead.
+* `LDAP_ADD_DN`: the admin DN to use when adding entries. If this is left empty, the value of `LDAP_DN` will be used instead.
+* `LDAP_ADD_PW`: the admin password to use when adding entries. If this is left empty, the value of `LDAP_PASSWORD` will be used instead.
+
+You can add new records to an LDAP subtree using the `HandlerLDAP` class:
+
+```
+use CSUNMetaLab\Authentication\Factories\HandlerLDAPFactory;
+use CSUNMetaLab\Authentication\Factories\LDAPPasswordFactory;
+
+public function addNewObject() {
+  $name = "New User";
+  $email = "newuser@example.com";
+  $pw = "1234";
+
+  $pwhash = LDAPPasswordFactory::SSHA($pw); // SSHA hash
+  $uid = 'ex_' . bin2hex(random_bytes(4)); // random UID
+
+  // retrieve a new HandlerLDAP instance and connect to the configured
+  // host
+  $ldap = HandlerLDAPFactory::fromDefaults();
+  $ldap->connect();
+
+  // set up the attributes to be added to the new record
+  $nameArr = explode(" ", $name);
+  $attrs = [
+    'objectClass' => 'inetOrgPerson',
+    'uid' => $uid,
+    'mail' => $email,
+    'displayName' => $name,
+    'cn' => $name,
+    'sn' => (!empty($nameArr[1]) ? $nameArr[1] : "Example"),
+    'givenName' => $nameArr[0],
+    'userPassword' => $pwhash,
+  ];
+
+  // add the object to the add subtree
+  $success = $ldap->addObject($uid, $attrs);
+  if($success) {
+    return "Successfully registered account {$name}! UID: {$uid}";
+  }
+
+  return "Could not register {$name}. UID: {$uid}. Please try again";
+}
+```
+
+## Modifying Existing LDAP Records
+
+This package will attempt to use the information configured in the following four `.env` values first when performing modify operations:
+
+* `LDAP_MODIFY_METHOD`: if `self`, then a user can bind as himself and modify his own attributes. If `admin` then the value of `LDAP_MODIFY_DN` and `LDAP_MODIFY_PW` will be used when performing the modification bind.
+* `LDAP_MODIFY_BASE_DN`: the subtree where entries will be modified. If this is left empty, the value of `LDAP_ADD_BASE_DN` will be used instead.
+* `LDAP_MODIFY_DN`: the admin DN to use when modifying entries. If this is left empty, the value of `LDAP_ADD_DN` will be used instead.
+* `LDAP_MODIFY_PW`: the admin password to use when modifying entries. If this is left empty, the value of `LDAP_ADD_PW` will be used instead.
+
+You can modify existing records in an LDAP subtree using the `HandlerLDAP` class:
+
+```
+use CSUNMetaLab\Authentication\Factories\HandlerLDAPFactory;
+use CSUNMetaLab\Authentication\Factories\LDAPPasswordFactory;
+
+public function modifyObject() {
+  // this lets a logged-in user modify their own attributes due to the bind
+  // as "self" as opposed to the LDAP_MODIFY_DN and LDAP_MODIFY_PW values
+  // from the .env file
+  $cur_pw = "1234";
+
+  $email = "newuser@example.com";
+  $newName = "Different Name";
+  $newNameArr = explode(" ", $newName);
+
+  // retrieve a new HandlerLDAP instance and connect to the configured
+  // host
+  $ldap = HandlerLDAPFactory::fromDefaults();
+  $ldap->connect();
+
+  // get the matching object for the logged-in user and resolve its DN
+  $obj = $ldap->searchByAuth($email);
+  $dn = $ldap->getAttributeFromResults($obj, 'dn');
+
+  // modification method of "self": make sure the user has the correct
+  // password by performing another bind; this will not be executed if
+  // the admin modify DN and password are being used instead
+  if(config('ldap.modify_method') == "self") {
+    $ldap->connectByDN($dn, $cur_pw);
+  }
+
+  // set a new name for the user
+  $success = $ldap->modifyObject($dn, [
+    'displayName' => $newName,
+    'cn' => $newName,
+    'givenName' => $newNameArr[0],
+    'sn' => $newNameArr[1],
+  ]);
+
+  if($success) {
+    return "Successfully changed the name for {$email}! DN: {$dn}";
+  }
+
+  return "Could not change the name for {$email}. DN: {$dn}";
+}
+```
+
+## Modifying LDAP User Passwords
+
+While you can perform a `modifyObject()` with the `userPassword` attribute and follow similar steps as those in [Modifying Existing LDAP Records](#modifying-existing-ldap-records), the `HandlerLDAP` class also provides a convenience method for changing user passwords.
+
+The password will be generated as a SSHA hash using a cryptographically-secure salt based on the output of `openssl_random_pseudo_bytes()` using a four-byte string:
+
+```
+public function modifyUserPassword() {
+  // this lets a logged-in user modify their own attributes due to the bind
+  // as "self" as opposed to the LDAP_MODIFY_DN and LDAP_MODIFY_PW values
+  // from the .env file
+  $cur_pw = "1234";
+
+  $email = "newuser@example.com";
+  $new_pw = "2345";
+
+  // retrieve a new HandlerLDAP instance and connect to the configured
+  // host
+  $ldap = HandlerLDAPFactory::fromDefaults();
+  $ldap->connect();
+
+  // get the matching object for the logged-in user and resolve its DN
+  $obj = $ldap->searchByAuth($email);
+  $dn = $ldap->getAttributeFromResults($obj, 'dn');
+
+  // modification method of "self": make sure the user has the correct
+  // password by performing another bind; this will not be executed if
+  // the admin modify DN and password are being used instead
+  if(config('ldap.modify_method') == "self") {
+    $ldap->connectByDN($dn, $cur_pw);
+  }
+
+  // set a new password for the user
+  $success = $ldap->modifyObjectPassword($dn, $new_pw);
+
+  if($success) {
+    return "Successfully changed the password for {$email}! DN: {$dn}";
+  }
+
+  return "Could not change the password for {$email}. DN: {$dn}";
+}
+```
