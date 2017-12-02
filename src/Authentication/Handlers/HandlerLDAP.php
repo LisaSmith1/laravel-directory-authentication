@@ -470,8 +470,18 @@ class HandlerLDAP
 
 		// generate a new node and set its DN within the add subtree
 		$node = new Node();
-		$dn = $this->search_username . '=' . $identifier . ',' .
-			$this->add_base_dn;
+
+		// if the identifier contains a comma, it's likely a DN
+		if(strpos($identifier, ',') !== FALSE) {
+			$dn = $identifier;
+		}
+		else
+		{
+			// generate the DN from the identifier
+			$dn = $this->search_username . '=' . $identifier . ',' .
+				$this->add_base_dn;
+		}
+		
 		$node->setDn($dn);
 
 		// if the node already exists we want to return false to prevent any
@@ -516,12 +526,21 @@ class HandlerLDAP
 			);
 		}
 
-		// ensure the node exists before we perform an update since addition
-		// of nodes would be handled by addObject() instead
-		$dn = $this->search_username . '=' . $identifier . ',' .
-			$this->modify_base_dn;
+		// if the identifier contains a comma, it's likely a DN
+		if(strpos($identifier, ',') !== FALSE) {
+			$dn = $identifier;
+		}
+		else
+		{
+			// generate the DN from the identifier
+			$dn = $this->search_username . '=' . $identifier . ',' .
+				$this->modify_base_dn;
+		}
+
 		try
 		{
+			// ensure the node exists before we perform an update since addition
+			// of nodes would be handled by addObject() instead
 			$node = $this->ldap->getNode($dn);
 
 			// iterate over the attributes and apply the changes. If an
