@@ -4,6 +4,7 @@ namespace CSUNMetaLab\Authentication\Handlers;
 
 use Exception;
 
+use CSUNMetaLab\Authentication\Exceptions\LdapExtensionNotLoadedException;
 use CSUNMetaLab\Authentication\Factories\LDAPPasswordFactory;
 
 use Toyota\Component\Ldap\Core\Manager,
