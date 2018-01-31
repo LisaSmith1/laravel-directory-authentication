@@ -156,10 +156,17 @@ class HandlerLDAP
 	 * @param string $username The override username to use
 	 * @param string $password The override password to use
 	 *
+	 * @throws LdapExtensionNotLoadedException If the LDAP extension has not
+	 * been installed and loaded
 	 * @throws Exception If the LDAP connection fails
 	 * @return boolean
 	 */
 	public function connect($username="", $password="") {
+		// make sure the ldap extension has been loaded
+		if(!extension_loaded('ldap')) {
+			throw new LdapExtensionNotLoadedException();
+		}
+
 		$params = array(
 		    'hostname'  => $this->host,
 		    'base_dn' => $this->basedn,
@@ -266,10 +273,17 @@ class HandlerLDAP
 	 * @param string $dn The bind DN to use
 	 * @param string $password An optional password to use
 	 *
+	 * @throws LdapExtensionNotLoadedException If the LDAP extension has not
+	 * been installed and loaded
 	 * @throws Exception If the LDAP connection fails
 	 * @return boolean
 	 */
 	public function connectByDN($dn, $password="") {
+		// make sure the ldap extension has been loaded
+		if(!extension_loaded('ldap')) {
+			throw new LdapExtensionNotLoadedException();
+		}
+
 		$params = array(
 		    'hostname'  => $this->host,
 		    'base_dn' => $this->basedn,
