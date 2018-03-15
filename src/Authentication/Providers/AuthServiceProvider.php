@@ -28,12 +28,21 @@ class AuthServiceProvider extends ServiceProvider
 			Auth::provider('ldap', function($app, array $config) {
 				return new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP();
 			});
+
+			// database auth extension
+			Auth::provider('dbauth', function($app, array $config) {
+				return new \CSUNMetaLab\Authentication\Providers\UserProviderDB();
+			});
 		}
 		else
 		{
 			// Laravel 5.0
 			Auth::extend('ldap', function() {
 				return new Guard(new \CSUNMetaLab\Authentication\Providers\UserProviderLDAP,
+					App::make('session.store'));
+			});
+			Auth::extend('dbauth', function() {
+				return new Guard(new \CSUNMetaLab\Authentication\Providers\UserProviderDB,
 					App::make('session.store'));
 			});
 		}
@@ -47,6 +56,10 @@ class AuthServiceProvider extends ServiceProvider
 	public function boot() {
 		$this->publishes([
         	__DIR__.'/../config/ldap.php' => config_path('ldap.php'),
+    	]);
+
+    	$this->publishes([
+    		__DIR__.'/../config/dbauth.php' => config_path('dbauth.php');
     	]);
 	}
 
