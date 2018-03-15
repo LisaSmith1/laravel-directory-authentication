@@ -59,7 +59,7 @@ class AuthServiceProvider extends ServiceProvider
     	]);
 
     	$this->publishes([
-    		__DIR__.'/../config/dbauth.php' => config_path('dbauth.php');
+    		__DIR__.'/../config/dbauth.php' => config_path('dbauth.php'),
     	]);
 	}
 
