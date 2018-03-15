@@ -106,7 +106,7 @@ Default is `email`.
 
 ### DBAUTH_PASSWORD
 
-This is the value that will be used to perform the password validation as the password passed to the call to Auth::attempt().
+This is the value that will be used to perform the password validation as the password passed to the call to `Auth::attempt()`.
 
 Default is `password`.
 
