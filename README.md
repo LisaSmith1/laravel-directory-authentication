@@ -352,6 +352,8 @@ It still, however, relies on the implementations of `findForAuth()` and `findFor
 
 ### Comprehensive Subclass
 
+**IMPORTANT:** If the primary key for your model is anything other than `user_id` you need to implement a comprehensive subclass, specifically the `findForAuth()` and `findForAuthToken()` methods. The `$identifier` parameter will be the value of the primary key for the model instance when authentication checks are performed (such as when the `auth` middleware is used). Otherwise, your initial login will work but the session values will be incorrect so no subsequent login checks on the next request will go through.
+
 A more comprehensive subclass could be the following:
 
 ```
