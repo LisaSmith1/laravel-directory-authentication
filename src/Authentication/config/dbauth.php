@@ -8,8 +8,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | True to turn off password validation when retrieving a user record in the
-    | database. When false, searching is done with the username and password
-    | passed to Auth::attempt(). Default is false.
+    | database. When false, searching is done only with the username passed to
+    | Auth::attempt(). Default is false.
     |
     */
     'allow_no_pass' => env("DBAUTH_ALLOW_NO_PASS", false),

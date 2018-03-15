@@ -1,9 +1,11 @@
 # Laravel Directory Authentication
 Composer package for Laravel 5.0 and above to allow for directory-based authentication.
 
-This package adds the ability to perform LDAP-based authentication.
+This package adds the ability to perform both local database and LDAP-based authentication.
 
-Once the user has been authenticated via the directory service a local database lookup is performed in order to resolve a user model instance that is accessible through `Auth::user()`.
+Once the user has been authenticated via the directory service (such as LDAP) a local database lookup is performed in order to resolve a user model instance that is accessible through `Auth::user()`.
+
+If you wish to use only local database authentication (but still leverage the functionality of the package) instead, please look at the [Laravel Directory Authentication (Database Only)](https://github.com/csun-metalab/laravel-directory-authentication/blob/dev/README_DB.md) Readme.
 
 ## Table of Contents
 
@@ -370,14 +372,14 @@ class User extends MetaUser
 
   // implements MetaAuthenticatableContract#findForAuth
   public static function findForAuth($identifier) {
-    return self::where($this->primaryKey, '=', $identifier)
+    return self::where('uid', '=', $identifier)
       ->where('status', 'Active')
       ->first();
   }
 
   // implements MetaAuthenticatableContract#findForAuthToken
   public static function findForAuthToken($identifier, $token) {
-    return self::where($this->primaryKey, '=', $identifier)
+    return self::where('uid', '=', $identifier)
       ->where('remember_token', '=', $token)
       ->where('status', 'Active')
       ->first();
