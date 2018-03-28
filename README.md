@@ -63,6 +63,17 @@ LDAP_SEARCH_USER_QUERY=
 
 LDAP_DB_USER_ID_PREFIX=
 LDAP_DB_RETURN_FAKE_USER=false
+
+LDAP_OVERLAY_DN=
+
+LDAP_ADD_BASE_DN=
+LDAP_ADD_DN=
+LDAP_ADD_PW=
+
+LDAP_MODIFY_METHOD=self
+LDAP_MODIFY_BASE_DN=
+LDAP_MODIFY_DN=
+LDAP_MODIFY_PW=
 ```
 
 #### Service Provider
@@ -137,6 +148,8 @@ This is the base DN under which all people to be searched for reside. This may b
 Someone under this base DN may therefore exist with the following record:
 
 `uid=person,ou=People,ou=Auth,o=Organization`
+
+**NOTE:** The environment variables of `LDAP_BASE_DN` and `LDAP_OVERLAY_DN` are incompatible. Please use either one or the other. Ideally, you would use `LDAP_OVERLAY_DN` if your LDAP server makes use of an overlay to create a logical root for multiple subtrees. Otherwise, use `LDAP_BASE_DN` for the search base.
 
 ## Optional Environment Variables
 
@@ -217,6 +230,8 @@ Default is `false`.
 Overlay DN to give a consistent logical root for the search, add and modify subtrees in the directory.
 
 Default is a blank string.
+
+**NOTE:** The environment variables of `LDAP_BASE_DN` and `LDAP_OVERLAY_DN` are incompatible. Please use either one or the other. Ideally, you would use `LDAP_OVERLAY_DN` if your LDAP server makes use of an overlay to create a logical root for multiple subtrees. Otherwise, use `LDAP_BASE_DN` for the search base.
 
 ### LDAP_ADD_BASE_DN
 
