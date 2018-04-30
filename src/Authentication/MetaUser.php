@@ -10,14 +10,17 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 
+use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+
 /**
  * Base class used with the META+Lab authentication mechanism. This can be
  * used on its own or subclassed for a specific application. If used on its
  * own it expects a table called "users" with a primary key of "user_id".
  */
-class MetaUser extends Model implements AuthenticatableContract, MetaAuthenticatableContract {
-
+class MetaUser extends Model implements AuthenticatableContract, AuthorizableContract, MetaAuthenticatableContract {
 	use Authenticatable;
+	use Authorizable;
 
 	/**
 	 * The database table used by the model.
