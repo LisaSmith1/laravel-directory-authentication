@@ -5,6 +5,8 @@ This package adds the ability to perform both local database and LDAP-based auth
 
 If you wish to use full directory authentication (not just local-database auth) instead, then please look at the [Laravel Directory Authentication](https://github.com/csun-metalab/laravel-directory-authentication/blob/dev/README.md) Readme.
 
+**NOTE:** authorization was added in Laravel 5.1 and therefore there is a breaking change in the `MetaUser` class. If you need to use this package for Laravel 5.0, please use any version of this package prior to `1.6.0`.
+
 ## Table of Contents
 
 * [Installation](#installation)
